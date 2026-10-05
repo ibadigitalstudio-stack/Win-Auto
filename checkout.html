@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="uk" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Оформлення замовлення — Win Auto</title>
+<script>
+  try { document.documentElement.dataset.theme = localStorage.getItem('winauto-theme') || 'dark'; } catch (e) {}
+</script>
+<link rel="stylesheet" href="styles.css?v=20">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap topbar__in">
+    <span>Доставка по всій Україні · Нова Пошта · Делівері</span>
+    <span class="topbar__r">Пн–Сб 9:00–19:00 · <a href="tel:+380930210975">+38 (093) 021-09-75</a></span>
+  </div>
+</div>
+
+<header class="header">
+  <div class="wrap header__in">
+    <a href="index.html" class="logo" aria-label="Win Auto">
+      <span class="logo__mark"><i></i><i></i><i></i></span>
+      <span class="logo__txt">WIN<b>AUTO</b></span>
+    </a>
+    <a href="catalog.html" class="back">← До каталогу</a>
+    <span class="grow"></span>
+    <div class="seg" id="cur" role="group" aria-label="Валюта">
+      <button type="button" data-cur="UAH">₴</button>
+      <button type="button" data-cur="USD">$</button>
+      <button type="button" data-cur="EUR">€</button>
+    </div>
+    <a class="iconbtn" href="cabinet.html" aria-label="Кабінет" title="Мій кабінет">
+      <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="8" r="4" fill="currentColor"/><path d="M4 20.5c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5" fill="currentColor"/></svg>
+    </a>
+    <button class="iconbtn" id="themeBtn" type="button" aria-label="Змінити тему" title="Змінити тему">
+      <svg class="i-sun" viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="4.2" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/></g></svg>
+      <svg class="i-moon" viewBox="0 0 24 24" width="20" height="20"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z" fill="currentColor"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="wrap co" id="page">
+  <h1 class="co__title">Оформлення замовлення</h1>
+
+  <div class="co__grid" id="coGrid">
+    <form id="checkout" class="co__form" novalidate>
+
+      <section class="box">
+        <h2><span class="step">1</span>Контактні дані</h2>
+        <div class="row2">
+          <label class="fld">Ім'я
+            <input name="first" id="first" autocomplete="given-name" placeholder="Іван">
+            <small class="err" data-err="first"></small>
+          </label>
+          <label class="fld">Прізвище
+            <input name="last" id="last" autocomplete="family-name" placeholder="Петренко">
+            <small class="err" data-err="last"></small>
+          </label>
+        </div>
+        <label class="fld">Номер телефону
+          <input name="phone" id="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="+38 (0__) ___-__-__">
+          <small class="err" data-err="phone"></small>
+        </label>
+      </section>
+
+      <section class="box">
+        <h2><span class="step">2</span>Спосіб доставки</h2>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="carrier" value="np" checked>
+            <span><b>Нова Пошта</b><small>Доставка у відділення або поштомат</small></span></label>
+          <label class="opt"><input type="radio" name="carrier" value="del">
+            <span><b>Делівері</b><small>Доставка на склад-відділення, зручно для великих деталей</small></span></label>
+        </div>
+
+        <div class="fld combo" id="cityBox">
+          <label for="city">Населений пункт</label>
+          <input id="city" autocomplete="off" placeholder="Почніть вводити назву міста">
+          <ul class="combo__list" hidden></ul>
+          <small class="err" data-err="city"></small>
+        </div>
+        <div class="fld combo" id="whBox">
+          <label for="wh">Відділення</label>
+          <input id="wh" autocomplete="off" placeholder="Спершу оберіть населений пункт" disabled>
+          <ul class="combo__list" hidden></ul>
+          <small class="err" data-err="wh"></small>
+        </div>
+      </section>
+
+      <section class="box">
+        <h2><span class="step">3</span>Спосіб оплати</h2>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="pay" value="bank" checked>
+            <span><b>Оплата на рахунок</b><small>Переказ за реквізитами (IBAN). Реквізити покажемо після оформлення замовлення.</small></span></label>
+          <label class="opt"><input type="radio" name="pay" value="paypass">
+            <span><b>PayPass</b><small>Безконтактна оплата карткою або смартфоном під час отримання.</small></span></label>
+        </div>
+        <label class="fld">Коментар до замовлення <i>(необов'язково)</i>
+          <textarea name="note" id="note" rows="2" placeholder="VIN-код авто, побажання щодо доставки тощо"></textarea>
+        </label>
+      </section>
+
+      <button class="btn btn--wide co__submit" type="submit">Підтвердити замовлення</button>
+      <p class="note">Натискаючи кнопку, ви погоджуєтеся на обробку персональних даних для виконання замовлення.</p>
+    </form>
+
+    <aside class="box co__sum">
+      <h2>Ваше замовлення</h2>
+      <div id="items"></div>
+      <div class="sumrow"><span>Товари</span><span id="sumGoods"></span></div>
+      <div class="sumrow"><span>Доставка</span><span>за тарифами перевізника</span></div>
+      <div class="total"><span>До сплати</span><span id="sumTotal"></span></div>
+      <p class="note" id="sumNote"></p>
+    </aside>
+  </div>
+
+  <section class="box done" id="done" hidden></section>
+</main>
+
+<footer class="footer">
+  <div class="wrap footer__in">
+    <div>
+      <div class="logo logo--sm"><span class="logo__mark"><i></i><i></i><i></i></span><span class="logo__txt">WIN<b>AUTO</b></span></div>
+      <p>Інтернет-магазин автозапчастин: деталі кузова, оптика та тюнінг.</p>
+      <p class="rate" id="rate"></p>
+    </div>
+    <div>
+      <h4>Інформація</h4>
+      <p class="footer__links"><a href="about.html">Про нас</a><a href="delivery.html">Доставка та оплата</a><a href="returns.html">Обмін та повернення</a><a href="offer.html">Договір оферти</a><a href="privacy.html">Політика конфіденційності</a><a href="contacts.html">Контакти</a></p>
+    </div>
+    <div>
+      <h4>Контакти</h4>
+      <p><a href="tel:+380930210975">+38 (093) 021-09-75</a><br><a href="mailto:info@win-auto.com.ua">info@win-auto.com.ua</a><br>Волинська обл., с. Гаразджа, вул. Рівненська, 1<br>Пн–Сб 9:00–19:00</p>
+    </div>
+  </div>
+  <div class="wrap footer__copy">© <span id="year"></span> Win Auto. Усі права захищені.</div>
+</footer>
+
+<script src="products.js?v=20"></script>
+<script src="menu.js?v=20"></script>
+<script src="checkout.js?v=20"></script>
+</body>
+</html>

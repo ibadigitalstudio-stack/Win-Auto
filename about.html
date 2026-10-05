@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="uk" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Про нас — Win Auto</title>
+<script>
+  try { document.documentElement.dataset.theme = localStorage.getItem('winauto-theme') || 'dark'; } catch (e) {}
+</script>
+<link rel="stylesheet" href="styles.css?v=20">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap topbar__in">
+    <span>Доставка по всій Україні · Нова Пошта · Делівері</span>
+    <span class="topbar__r">Пн–Сб 9:00–19:00 · <a href="tel:+380930210975">+38 (093) 021-09-75</a></span>
+  </div>
+</div>
+
+<header class="header">
+  <div class="wrap header__in">
+    <a href="index.html" class="logo" aria-label="Win Auto">
+      <span class="logo__mark"><i></i><i></i><i></i></span>
+      <span class="logo__txt">WIN<b>AUTO</b></span>
+    </a>
+    <nav class="nav"><a href="index.html">Головна</a><a href="catalog.html">Каталог</a><a href="contacts.html">Контакти</a></nav>
+    <span class="grow"></span>
+    <a class="iconbtn" href="cabinet.html" aria-label="Кабінет" title="Мій кабінет">
+      <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="8" r="4" fill="currentColor"/><path d="M4 20.5c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5" fill="currentColor"/></svg>
+    </a>
+    <button class="iconbtn" id="themeBtn" type="button" aria-label="Змінити тему" title="Змінити тему">
+      <svg class="i-sun" viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="4.2" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/></g></svg>
+      <svg class="i-moon" viewBox="0 0 24 24" width="20" height="20"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z" fill="currentColor"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="wrap co">
+  <h1 class="co__title">Про нас</h1>
+  <div class="info">
+    <article class="box info__body">
+
+<p class="lead">Win Auto — український інтернет-магазин автозапчастин. Ми продаємо кузовні деталі, оптику та тюнінг для легкових авто за доступними цінами та швидко доставляємо їх по всій Україні.</p>
+<h2>Хто ми</h2>
+<p>Win Auto — це команда фахівців із підбору автозапчастин, які щодня працюють із різними марками авто. Ми знаємо, як легко помилитися з деталлю, тому допомагаємо обрати саме ту, що підійде вашому автомобілю.</p>
+<h2>Чим ми корисні</h2>
+<ul>
+  <li>Підбираємо запчастини за маркою та моделлю, VIN-кодом або оригінальним номером деталі.</li>
+  <li>Пропонуємо і оригінальні деталі, і якісні аналоги — щоб ви могли обрати найкраще співвідношення ціни та якості.</li>
+  <li>Відправляємо замовлення по Україні Новою Поштою та Делівері.</li>
+  <li>Консультуємо до покупки й залишаємося на зв'язку після неї.</li>
+</ul>
+<h2>З ким ми працюємо</h2>
+<p>Наші клієнти — приватні автовласники, СТО, автомайстерні та магазини запчастин. Для постійних партнерів діють окремі умови співпраці — зателефонуйте нам, і ми все обговоримо.</p>
+<div class="info__facts">
+  <div><b>22</b><span>марки авто в каталозі</span></div>
+  <div><b>197</b><span>моделей</span></div>
+  <div><b>1–3 дні</b><span>доставка по Україні</span></div>
+  <div><b>14 днів</b><span>на обмін і повернення</span></div>
+</div>
+<p><a class="btn" href="catalog.html">Перейти до каталогу</a></p>
+    </article>
+    <aside class="box info__side"><h2>Інформація</h2><nav><a href="about.html" class="on">Про нас</a><a href="delivery.html">Доставка та оплата</a><a href="returns.html">Обмін та повернення</a><a href="offer.html">Договір оферти</a><a href="privacy.html">Політика конфіденційності</a><a href="contacts.html">Контакти</a></nav></aside>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="wrap footer__in">
+    <div>
+      <div class="logo logo--sm"><span class="logo__mark"><i></i><i></i><i></i></span><span class="logo__txt">WIN<b>AUTO</b></span></div>
+      <p>Інтернет-магазин автозапчастин: деталі кузова, оптика та тюнінг.</p>
+      <p class="rate" id="rate"></p>
+    </div>
+    <div>
+      <h4>Інформація</h4>
+      <p class="footer__links"><a href="about.html">Про нас</a><a href="delivery.html">Доставка та оплата</a><a href="returns.html">Обмін та повернення</a><a href="offer.html">Договір оферти</a><a href="privacy.html">Політика конфіденційності</a><a href="contacts.html">Контакти</a></p>
+    </div>
+    <div>
+      <h4>Контакти</h4>
+      <p><a href="tel:+380930210975">+38 (093) 021-09-75</a><br><a href="mailto:info@win-auto.com.ua">info@win-auto.com.ua</a><br>Волинська обл., с. Гаразджа, вул. Рівненська, 1<br>Пн–Сб 9:00–19:00</p>
+    </div>
+  </div>
+  <div class="wrap footer__copy">© <span id="year"></span> Win Auto. Усі права захищені.</div>
+</footer>
+
+<script src="products.js?v=20"></script>
+<script src="menu.js?v=20"></script>
+<script src="info.js?v=20"></script>
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="uk" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Каталог запчастин — Win Auto</title>
+<meta name="description" content="Win Auto — інтернет-магазин автозапчастин для Tesla, BMW, Audi, Hyundai, Kia, Mercedes, Porsche: деталі кузова, оптика, тюнінг.">
+<script>
+  // тема застосовується до першого рендеру, щоб не блимало
+  try { document.documentElement.dataset.theme = localStorage.getItem('winauto-theme') || 'dark'; } catch (e) {}
+</script>
+<link rel="stylesheet" href="styles.css?v=20">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap topbar__in">
+    <span>Доставка по всій Україні · Нова Пошта · Делівері</span>
+    <span class="topbar__r">Пн–Сб 9:00–19:00 · <a href="tel:+380930210975">+38 (093) 021-09-75</a></span>
+  </div>
+</div>
+
+<header class="header">
+  <div class="wrap header__in">
+    <a href="index.html" class="logo" aria-label="Win Auto">
+      <span class="logo__mark"><i></i><i></i><i></i></span>
+      <span class="logo__txt">WIN<b>AUTO</b></span>
+    </a>
+    <nav class="nav"><a href="index.html" data-nav="home">Головна</a><a href="catalog.html" data-nav="catalog" class="on">Каталог</a><a href="contacts.html">Контакти</a></nav>
+    <form class="search" id="searchForm" role="search">
+      <svg viewBox="0 0 24 24" width="18" height="18"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16.5 16.5 21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <input id="q" type="search" placeholder="Пошук за назвою або виробником" autocomplete="off">
+    </form>
+    <div class="seg" id="cur" role="group" aria-label="Валюта">
+      <button type="button" data-cur="UAH">₴</button>
+      <button type="button" data-cur="USD">$</button>
+      <button type="button" data-cur="EUR">€</button>
+    </div>
+    <a class="iconbtn" href="cabinet.html" aria-label="Кабінет" title="Мій кабінет">
+      <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="8" r="4" fill="currentColor"/><path d="M4 20.5c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5" fill="currentColor"/></svg>
+    </a>
+    <button class="iconbtn" id="themeBtn" type="button" aria-label="Змінити тему" title="Змінити тему">
+      <svg class="i-sun" viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="4.2" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/></g></svg>
+      <svg class="i-moon" viewBox="0 0 24 24" width="20" height="20"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z" fill="currentColor"/></svg>
+    </button>
+    <button class="cartbtn" id="cartBtn" type="button">
+      <svg viewBox="0 0 24 24" width="20" height="20"><path d="M3 4h2.5l2.2 11h10.6L20.5 7H7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="19.5" r="1.6" fill="currentColor"/><circle cx="17" cy="19.5" r="1.6" fill="currentColor"/></svg>
+      <span>Кошик</span><em id="cartCount">0</em>
+    </button>
+  </div>
+</header>
+
+<main class="wrap" id="catalog">
+  <h1 class="page__title">Каталог запчастин</h1>
+  <nav class="crumbs" id="crumbs" aria-label="Навігація каталогом"></nav>
+  <div class="active" id="active"></div>
+  <section class="steps" id="steps"></section>
+
+  <div class="layout" id="gridView" hidden>
+    <aside class="side">
+      <details class="side__box" id="sideBox" open>
+        <summary>Категорії</summary>
+        <nav id="tree" class="tree"></nav>
+      </details>
+    </aside>
+
+    <section>
+      <div class="toolbar">
+        <p class="count" id="count"></p>
+        <div class="toolbar__r">
+          <label class="chk"><input type="checkbox" id="inStock"> Лише в наявності</label>
+          <select id="sort" aria-label="Сортування">
+            <option value="def">За замовчуванням</option>
+            <option value="asc">Спочатку дешевші</option>
+            <option value="desc">Спочатку дорожчі</option>
+            <option value="name">За назвою</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid" id="grid"></div>
+      <div class="more"><button class="btn btn--ghost" id="more" type="button">Показати ще</button></div>
+    </section>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="wrap footer__in">
+    <div>
+      <div class="logo logo--sm"><span class="logo__mark"><i></i><i></i><i></i></span><span class="logo__txt">WIN<b>AUTO</b></span></div>
+      <p>Інтернет-магазин автозапчастин: деталі кузова, оптика та тюнінг.</p>
+      <p class="rate" id="rate"></p>
+    </div>
+    <div>
+      <h4>Інформація</h4>
+      <p class="footer__links"><a href="about.html">Про нас</a><a href="delivery.html">Доставка та оплата</a><a href="returns.html">Обмін та повернення</a><a href="offer.html">Договір оферти</a><a href="privacy.html">Політика конфіденційності</a><a href="contacts.html">Контакти</a></p>
+    </div>
+    <div>
+      <h4>Контакти</h4>
+      <p><a href="tel:+380930210975">+38 (093) 021-09-75</a><br><a href="mailto:info@win-auto.com.ua">info@win-auto.com.ua</a><br>Волинська обл., с. Гаразджа, вул. Рівненська, 1<br>Пн–Сб 9:00–19:00</p>
+    </div>
+  </div>
+  <div class="wrap footer__copy">© <span id="year"></span> Win Auto. Усі права захищені.</div>
+</footer>
+
+<!-- Картка товару -->
+<div class="overlay" id="modal" hidden>
+  <div class="modal" role="dialog" aria-modal="true">
+    <button class="x" data-close type="button" aria-label="Закрити">×</button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<!-- Кошик -->
+<div class="overlay overlay--side" id="cart" hidden>
+  <aside class="drawer" role="dialog" aria-modal="true" aria-label="Кошик">
+    <div class="drawer__head"><h3>Кошик</h3><button class="x" data-close type="button" aria-label="Закрити">×</button></div>
+    <div class="drawer__body" id="cartBody"></div>
+    <div class="drawer__foot" id="cartFoot"></div>
+  </aside>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="products.js?v=20"></script>
+<script src="menu.js?v=20"></script>
+<script src="cars.js?v=20"></script>
+<script src="app.js?v=20"></script>
+</body>
+</html>
