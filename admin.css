@@ -1,0 +1,91 @@
+/* Адмін-панель Win Auto */
+body.admin { padding-bottom: 70px; }
+.adm__badge { font-size: 12px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; }
+.adm__user { display: grid; text-align: right; line-height: 1.2; }
+.adm__user small { color: var(--accent); font-weight: 700; font-size: 12px; }
+
+/* Вхід */
+.adm__login { max-width: 560px; padding-top: 48px; }
+.adm__login h1, .adm__main h1 { margin: 0 0 18px; font: italic 900 26px/1.1 "Arial Black", Arial, sans-serif; text-transform: uppercase; }
+.roles { display: grid; gap: 10px; margin-top: 16px; }
+.role { text-align: left; background: var(--bg); border: 1px solid var(--line); border-left: 4px solid var(--red); border-radius: 8px; padding: 14px 16px; color: var(--text); }
+.role:hover { border-color: var(--red); }
+.role b { display: block; font-size: 16px; }
+.role small { color: var(--muted); }
+
+/* Каркас: бічне меню + вміст */
+.adm { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 24px; padding-top: 24px; align-items: start; }
+.adm__side { position: sticky; top: 86px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.adm__sidebtn { display: none; width: 100%; background: none; border: 0; padding: 13px 16px; font-weight: 800; text-align: left; }
+.adm__group { padding: 14px 16px 6px; font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+.adm__side nav button { display: flex; justify-content: space-between; align-items: center; width: 100%; background: none; border: 0; border-left: 3px solid transparent; padding: 10px 16px 10px 13px; text-align: left; color: var(--text); }
+.adm__side nav button:hover { color: var(--accent); }
+.adm__side nav button.on { border-left-color: var(--red); background: var(--panel-2); font-weight: 700; }
+.adm__side nav em { font-style: normal; background: var(--red); color: #fff; border-radius: 999px; min-width: 20px; height: 20px; padding: 0 6px; display: inline-grid; place-items: center; font-size: 11px; font-weight: 800; }
+.adm__side nav { padding-bottom: 10px; }
+.adm .box { margin-bottom: 16px; }
+.adm__row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+.adm__row .fld { flex: 1 1 170px; margin: 0; }
+
+.status { font-size: 14px; color: var(--muted); margin: 10px 0 0; }
+.status:empty { display: none; }
+.status.ok { color: var(--ok); } .status.bad { color: var(--accent); }
+.help { font-size: 13.5px; color: var(--muted); line-height: 1.55; }
+.help ol { padding-left: 20px; margin: 8px 0; }
+.help code { background: var(--panel-2); padding: 1px 5px; border-radius: 4px; }
+
+/* Показники */
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.kpi { background: var(--panel); border: 1px solid var(--line); border-top: 3px solid var(--red); border-radius: var(--r); padding: 14px 16px; }
+.kpi b { display: block; font-size: 22px; font-weight: 800; }
+.kpi span { color: var(--muted); font-size: 13px; }
+
+/* Таблиці */
+.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
+.tbl th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); padding: 8px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.tbl td { padding: 9px 6px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.tbl img { width: 52px; height: 52px; object-fit: contain; background: #f3f3f4; border-radius: 6px; display: block; }
+.tbl input[type="number"], .tbl input[type="text"], .tbl input[type="date"], .tbl select { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 7px 8px; color: var(--text); max-width: 150px; }
+.tbl input[type="number"] { width: 110px; }
+.tbl input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--red); }
+.tbl tr.changed td:first-child { box-shadow: inset 3px 0 0 var(--red); }
+.tbl tr.click { cursor: pointer; }
+.tbl tr.click:hover td { background: var(--panel-2); }
+.tbl .acts { white-space: nowrap; text-align: right; }
+.tbl .acts button { margin-left: 6px; }
+.tbl .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tbl__wrap { overflow-x: auto; }
+.tbl small { color: var(--muted); }
+
+.tag { display: inline-block; font-size: 12px; font-weight: 700; border-radius: 999px; padding: 3px 10px; border: 1px solid var(--line); white-space: nowrap; }
+.tag--new { background: var(--red); border-color: var(--red); color: #fff; }
+.tag--confirmed { border-color: var(--warn); color: var(--warn); }
+.tag--shipped { border-color: var(--accent); color: var(--accent); }
+.tag--done, .tag--paid { border-color: var(--ok); color: var(--ok); }
+.tag--cancelled { color: var(--muted); text-decoration: line-through; }
+
+/* Картка замовлення */
+.ord h2 { margin: 0 0 4px; font-size: 20px; }
+.ord__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; margin-top: 14px; }
+.ord h5 { margin: 16px 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+.ord p { margin: 0 0 4px; }
+.ord .req { margin: 0; }
+.ord__form { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; margin-top: 8px; }
+.ord__form .wide { grid-column: 1 / -1; }
+
+.frm { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+.frm .wide { grid-column: 1 / -1; }
+.frm__pic { display: flex; gap: 14px; align-items: center; }
+.frm__pic img { width: 96px; height: 96px; object-fit: contain; background: #f3f3f4; border-radius: 8px; }
+
+.bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; background: var(--panel); border-top: 3px solid var(--red); box-shadow: var(--shadow); }
+.bar__in { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding-top: 12px; padding-bottom: 12px; }
+
+@media (max-width: 900px) {
+  .adm { grid-template-columns: 1fr; gap: 14px; }
+  .adm__side { position: static; }
+  .adm__sidebtn { display: block; }
+  .adm__side:not(.open) nav { display: none; }
+  .ord__grid, .ord__form, .frm { grid-template-columns: 1fr; }
+  .adm__badge { display: none; }
+}

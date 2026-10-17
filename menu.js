@@ -1,3 +1,68 @@
+// Лічильники та пікселі (ідентифікатори задаються в адмін-панелі → «Аналітика та пікселі»)
+(function () {
+  var T = (window.SITE || {}).tracking || {};
+  function script(src) { var s = document.createElement('script'); s.async = true; s.src = src; document.head.appendChild(s); }
+  window.dataLayer = window.dataLayer || [];
+  if (/^GTM-[A-Z0-9]+$/i.test(T.gtm || '')) {
+    window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+    script('https://www.googletagmanager.com/gtm.js?id=' + T.gtm);
+  }
+  if (/^G-[A-Z0-9]+$/i.test(T.ga4 || '')) {
+    window.gtag = function () { window.dataLayer.push(arguments); };
+    window.gtag('js', new Date());
+    window.gtag('config', T.ga4);
+    script('https://www.googletagmanager.com/gtag/js?id=' + T.ga4);
+  }
+  if (/^\d+$/.test(T.fbPixel || '')) {
+    var f = window.fbq = function () { f.callMethod ? f.callMethod.apply(f, arguments) : f.queue.push(arguments); };
+    window._fbq = f; f.push = f; f.loaded = true; f.version = '2.0'; f.queue = [];
+    script('https://connect.facebook.net/en_US/fbevents.js');
+    f('init', T.fbPixel);
+    f('track', 'PageView');
+  }
+  // події магазину: надсилаються в усі підключені сервіси
+  window.WATrack = function (name, value, items) {
+    var ga = { add_to_cart: 'add_to_cart', purchase: 'purchase' }[name], fb = { add_to_cart: 'AddToCart', purchase: 'Purchase' }[name];
+    var params = { currency: 'UAH', value: Math.round(value * 100) / 100 };
+    if (window.fbq && fb) window.fbq('track', fb, params);
+    if (items) params.items = items;
+    if (window.gtag && ga) window.gtag('event', ga, params);
+    else if (T.gtm && ga) window.dataLayer.push({ event: ga, ecommerce: params });
+  };
+})();
+
+// Налаштування сайту (site.js, редагуються в адмін-панелі) підставляються в усі сторінки
+(function () {
+  var S = window.SITE;
+  if (!S) return;
+  // значення, вписані у верстку сторінок
+  var D = { phoneText: '+38 (093) 021-09-75', email: 'info@win-auto.com.ua', address: 'Волинська обл., с. Гаразджа, вул. Рівненська, 1',
+    hours: 'Пн–Сб 9:00–19:00', hours2: 'Пн–Сб: 9:00–19:00', topbar: 'Доставка по всій Україні · Нова Пошта · Делівері' };
+  var d = String(S.phone || '').replace(/\D/g, '');
+  var phoneText = /^380\d{9}$/.test(d) ? '+38 (' + d.slice(2, 5) + ') ' + d.slice(5, 8) + '-' + d.slice(8, 10) + '-' + d.slice(10) : (S.phone || D.phoneText);
+  window.SITE_PHONE = { href: 'tel:+' + d, text: phoneText };
+  var swaps = [[D.phoneText, phoneText], [D.email, S.email], [D.address, S.address], [D.hours2, String(S.hours || '').replace(' ', ': ')], [D.hours, S.hours], [D.topbar, S.topbar]]
+    .filter(function (p) { return p[1] && p[0] !== p[1]; });
+  if (swaps.length) {
+    var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null), n;
+    while ((n = walker.nextNode())) {
+      var t = n.nodeValue;
+      swaps.forEach(function (p) { if (t.indexOf(p[0]) !== -1) t = t.split(p[0]).join(p[1]); });
+      if (t !== n.nodeValue) n.nodeValue = t;
+    }
+  }
+  [].forEach.call(document.querySelectorAll('a[href^="tel:"]'), function (a) { a.href = 'tel:+' + d; });
+  [].forEach.call(document.querySelectorAll('a[href^="mailto:"]'), function (a) { if (S.email) a.href = 'mailto:' + S.email; });
+  var h1 = document.querySelector('.hero h1'), sub = document.querySelector('.hero__sub');
+  if (h1 && S.heroTitle) {
+    h1.textContent = S.heroTitle + ' ';
+    var sp = document.createElement('span');
+    sp.textContent = S.heroAccent || '';
+    h1.appendChild(sp);
+  }
+  if (sub && S.heroSub) sub.textContent = S.heroSub;
+})();
+
 // Навігація в шапці: мега-меню «Каталог» (комп'ютер) і бічне меню (телефон)
 (function () {
   var brands = window.BRANDS || [];
@@ -52,7 +117,7 @@
     '<div class="mnav__tools"><div class="mnav__row" data-slot="cur"><span>Валюта</span></div>' +
     '<div class="mnav__row" data-slot="theme"><span>Тема</span></div></div>' +
     '<nav class="mnav__info">' + links(info) + '</nav>' +
-    '<div class="mnav__contact"><a href="tel:+380930210975">+38 (093) 021-09-75</a><small>Пн–Сб 9:00–19:00</small></div>' +
+    '<div class="mnav__contact"><a href="' + ((window.SITE_PHONE || {}).href || 'tel:+380930210975') + '">' + ((window.SITE_PHONE || {}).text || '+38 (093) 021-09-75') + '</a><small>' + esc((window.SITE || {}).hours || 'Пн–Сб 9:00–19:00') + '</small></div>' +
     '</aside>';
   document.body.appendChild(side);
 

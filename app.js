@@ -364,6 +364,7 @@
       if (!p || d <= 0) return;
       it = cart[k] = { q: 0, n: p.n, p: p.p, img: p.img, car: p.cars[0].join(' '), oe: p.oe.join(' / ') };
     }
+    if (d > 0 && window.WATrack) window.WATrack('add_to_cart', it.p, [{ item_id: k, item_name: it.n, quantity: 1, price: it.p }]);
     it.q += d;
     if (!(it.q > 0)) delete cart[k];
     store.set('cart', cart);

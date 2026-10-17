@@ -1,11 +1,12 @@
 (function () {
-  // Реквізити для оплати на рахунок — ЗАМІНІТЬ на свої
+  // Реквізити для оплати на рахунок (запасні значення; робочі — у site.js)
   var BANK = {
     name: 'ФОП / ТОВ «Win Auto»',
     code: '00000000',
     iban: 'UA00 0000 0000 0000 0000 0000 00000',
     bank: 'Назва банку'
   };
+  if (window.SITE && window.SITE.bank) BANK = window.SITE.bank; // реквізити з адмін-панелі
   var NP_API = 'https://api.novaposhta.ua/v2.0/json/';
   var NP_KEY = ''; // публічні довідники працюють і без ключа; для продакшену додайте свій
   var DEL_API = 'https://www.delivery-auto.com/api/v4/Public/';
@@ -245,13 +246,16 @@
       items: lines().map(function (l) { return { id: l.p.id, oe: l.p.oe, name: l.p.n, qty: l.q, price: l.p.p }; }),
       total: sum
     };
-    // Демо: замовлення зберігається лише в браузері. Тут має бути відправка на сервер / у CRM / Telegram-бот.
+    // Копія замовлення лишається в браузері покупця (для розділу «Мої замовлення» в кабінеті)
     var orders = store.get('orders', []);
     orders.push(order);
     store.set('orders', orders);
+    // якщо підключено сервер замовлень — надсилаємо замовлення туди (його побачать менеджер і бухгалтер)
+    if (window.WABackend && window.WABackend.enabled) window.WABackend.createOrder(order).catch(function () {});
     if (!profile.first && !profile.phone) store.set('profile', { first: form.first.value.trim(), last: form.last.value.trim(), phone: order.phone, email: '' });
     store.set('cart', {});
     cart = {};
+    if (window.WATrack) window.WATrack('purchase', order.total, order.items.map(function (i) { return { item_id: i.id, item_name: i.name, quantity: i.qty, price: i.price }; }));
     showDone(order);
   });
 
