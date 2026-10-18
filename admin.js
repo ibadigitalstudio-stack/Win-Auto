@@ -124,7 +124,102 @@
       if (demo) status('listStatus', 'Режим перегляду: щоб зберігати зміни, підключіть GitHub у розділі «Підключення».');
     }).catch(function (err) { status('listStatus', err.message, 'bad'); });
   }
-  window.AdminCatalog = { ensure: ensure };
+  /* ---------- Ціни та прайс-листи ---------- */
+  var pReady = false;
+  function pFill() {
+    if (pReady) return;
+    pReady = true;
+    $('pBrand').innerHTML = opts(core.BRANDS.map(function (b) { return [b[0], b[0]]; }), 'Усі марки');
+    $('pModel').innerHTML = opts([], 'Усі моделі');
+    $('pCat').innerHTML = opts(core.CATS.map(function (c) { return [c.id, c.t]; }), 'Усі категорії');
+    $('pBrand').addEventListener('change', function () {
+      var b = $('pBrand').value;
+      $('pModel').innerHTML = opts(b ? models(b).map(function (m) { return [m, m]; }) : [], 'Усі моделі');
+      pInfo();
+    });
+    ['pModel', 'pCat', 'pStock', 'pPct', 'pRound'].forEach(function (id) { $(id).addEventListener('change', pInfo); $(id).addEventListener('input', pInfo); });
+    $('pList').addEventListener('click', priceList);
+    $('pApply').addEventListener('click', applyPrices);
+  }
+  // вибрані товари: [{p, b}] з усіх потрібних марок
+  function pSelect() {
+    var b = $('pBrand').value, brands = b ? [b] : core.BRANDS.map(function (x) { return x[0]; });
+    return Promise.all(brands.map(loadBrand)).then(function () {
+      var m = $('pModel').value, g = $('pCat').value, stock = $('pStock').checked, out = [], seen = {};
+      brands.forEach(function (br) {
+        (lists[br] || []).forEach(function (p) {
+          if (seen[p.id]) return;
+          if (m && !p.cars.some(function (c) { return c[0] === br && c[1] === m; })) return;
+          if (g && p.g !== g) return;
+          if (stock && !p.s) return;
+          seen[p.id] = 1;
+          out.push({ p: p, b: br });
+        });
+      });
+      return out;
+    });
+  }
+  function newPrice(v) {
+    var k = 1 + (parseFloat($('pPct').value) || 0) / 100, r = +$('pRound').value;
+    var x = v * k;
+    return r ? Math.max(r, Math.round(x / r) * r) : Math.round(x * 100) / 100;
+  }
+  var infoSeq = 0;
+  function pInfo() {
+    var my = ++infoSeq, pct = parseFloat($('pPct').value) || 0;
+    status('pInfo', 'Підрахунок…');
+    pSelect().then(function (sel) {
+      if (my !== infoSeq) return;
+      var ex = sel[0];
+      status('pInfo', 'Вибрано товарів: ' + sel.length + (ex && pct ? '. Наприклад: «' + ex.p.n.slice(0, 50) + '» ' + ex.p.p + ' → ' + newPrice(ex.p.p) + ' грн' : ''));
+    }).catch(function (err) { status('pInfo', err.message, 'bad'); });
+  }
+  function priceList() {
+    status('pInfo', 'Формування прайс-листа…');
+    pSelect().then(function (sel) {
+      if (!sel.length) { status('pInfo', 'Немає товарів для прайс-листа.', 'bad'); return; }
+      var cell = function (v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; };
+      var rows = [['Марка', 'Модель', 'Категорія', 'Підкатегорія', 'Назва', 'Оригінальні номери', 'Артикул', 'Тип', 'Наявність', 'Ціна, грн']];
+      sel.sort(function (a, b) { return (a.b + carOf(a.p, a.b)).localeCompare(b.b + carOf(b.p, b.b), 'uk'); }).forEach(function (x) {
+        var p = x.p;
+        rows.push([x.b, carOf(p, x.b), cat(p.g).t, p.sg, p.n, p.oe.join(', '), p.c || '', p.o ? 'Оригінал' : 'Аналог',
+          p.s ? 'В наявності' : 'Під замовлення', String(newPrice(p.p)).replace('.', ',')]);
+      });
+      var csv = '﻿' + rows.map(function (r) { return r.map(cell).join(';'); }).join('\r\n');
+      var a = document.createElement('a');
+      var pct = parseFloat($('pPct').value) || 0;
+      a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+      a.download = 'win-auto-prais' + ($('pBrand').value ? '-' + slug($('pBrand').value) : '') + (pct ? (pct > 0 ? '-plus' : '-minus') + Math.abs(pct) + 'pct' : '') + '-' + new Date().toISOString().slice(0, 10) + '.csv';
+      document.body.appendChild(a); a.click(); a.remove();
+      status('pInfo', 'Прайс-лист сформовано: ' + sel.length + ' товарів.', 'ok');
+    }).catch(function (err) { status('pInfo', err.message, 'bad'); });
+  }
+  function applyPrices() {
+    var pct = parseFloat($('pPct').value) || 0;
+    if (!pct) { status('pInfo', 'Вкажіть відсоток зміни ціни (наприклад, 5 або -10).', 'bad'); return; }
+    pSelect().then(function (sel) {
+      if (!sel.length) { status('pInfo', 'Немає товарів для зміни.', 'bad'); return; }
+      if (!confirm('Змінити ціни ' + sel.length + ' товарів на ' + (pct > 0 ? '+' : '') + pct + '%?')) return;
+      // той самий товар може лежати у файлах кількох марок — оновлюємо його скрізь
+      var price = {}, need = {};
+      sel.forEach(function (x) { price[x.p.id] = newPrice(x.p.p); x.p.cars.forEach(function (c) { need[c[0]] = 1; }); });
+      return Promise.all(Object.keys(need).filter(function (b) { return models(b).length; }).map(loadBrand)).then(function () {
+        Object.keys(lists).forEach(function (b) {
+          lists[b].forEach(function (p) {
+            if (price[p.id] == null) return;
+            p.p = price[p.id];
+            dirty[b] = true;
+            changedIds[p.id] = true;
+          });
+        });
+      renderBar();
+      if ($('aBrand').value) renderRows();
+      $('pPct').value = 0;
+      status('pInfo', 'Ціни ' + sel.length + ' товарів змінено. Натисніть «Опублікувати на сайті» внизу, щоб зберегти.', 'ok');
+      });
+    }).catch(function (err) { status('pInfo', err.message, 'bad'); });
+  }
+  window.AdminCatalog = { ensure: ensure, prices: function () { pFill(); pInfo(); } };
 
   /* ---------- Товари ---------- */
   function models(b) { return (core.BRANDS.filter(function (x) { return x[0] === b; })[0] || [0, []])[1]; }

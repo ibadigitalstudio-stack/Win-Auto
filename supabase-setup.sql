@@ -86,3 +86,70 @@ create trigger orders_guard before update on public.orders
 -- Після створення користувачів (Authentication → Users → Add user) призначте їм ролі, наприклад:
 -- insert into public.profiles (id, name, role)
 --   select id, 'Ім''я', 'admin' from auth.users where email = 'ваша-пошта@example.com';
+
+-- ============================================================
+-- Оптові клієнти: реєстрація з модерацією та персональна знижка
+-- ============================================================
+create table if not exists public.wholesale_clients (
+  id          uuid primary key references auth.users (id) on delete cascade,
+  created_at  timestamptz not null default now(),
+  last_name   text not null,
+  first_name  text not null,
+  business_type text check (business_type in ('СТО', 'Розборка', 'Інтернет-магазин', 'Дилер', 'Автопарк')),
+  company     text,
+  address     text not null,
+  phone       text not null,
+  email       text not null,
+  status      text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
+  discount    numeric not null default 0 check (discount >= 0 and discount <= 90),
+  approved_at timestamptz
+);
+alter table public.wholesale_clients enable row level security;
+-- для бази, створеної раніше без цього поля
+alter table public.wholesale_clients add column if not exists business_type text;
+
+-- клієнт подає заявку лише від свого імені й лише «на модерацію» без знижки
+drop policy if exists "client applies" on public.wholesale_clients;
+create policy "client applies" on public.wholesale_clients for insert to authenticated
+  with check (id = auth.uid() and status = 'pending' and discount = 0);
+-- клієнт бачить свою заявку, адміністратор — усі
+drop policy if exists "client or admin reads" on public.wholesale_clients;
+create policy "client or admin reads" on public.wholesale_clients for select to authenticated
+  using (id = auth.uid() or public.my_role() = 'admin');
+-- змінювати статус і знижку може лише адміністратор
+drop policy if exists "admin updates" on public.wholesale_clients;
+create policy "admin updates" on public.wholesale_clients for update to authenticated
+  using (public.my_role() = 'admin') with check (public.my_role() = 'admin');
+
+-- Замовлення: хто замовив і з якою знижкою
+alter table public.orders add column if not exists customer_id uuid references auth.users (id);
+alter table public.orders add column if not exists discount numeric not null default 0;
+alter table public.orders add column if not exists total_base numeric;
+
+-- замовлення від клієнта можна прив'язати лише до власного акаунта
+drop policy if exists "anyone can place an order" on public.orders;
+create policy "anyone can place an order" on public.orders for insert to anon, authenticated
+  with check (status = 'new' and paid = false and ttn is null and invoice is null
+              and (customer_id is null or customer_id = auth.uid()));
+-- клієнт бачить власні замовлення (для кабінету)
+drop policy if exists "client reads own orders" on public.orders;
+create policy "client reads own orders" on public.orders for select to authenticated
+  using (customer_id = auth.uid());
+
+-- Знижка в замовленні не може перевищувати знижку, яку клієнту призначив адміністратор
+create or replace function public.orders_discount_guard() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare allowed numeric := 0;
+begin
+  if new.customer_id is not null then
+    select coalesce(discount, 0) into allowed from public.wholesale_clients
+      where id = new.customer_id and status = 'approved';
+  end if;
+  if coalesce(new.discount, 0) > coalesce(allowed, 0) then
+    raise exception 'Знижка перевищує дозволену для цього клієнта';
+  end if;
+  return new;
+end $$;
+drop trigger if exists orders_discount_guard on public.orders;
+create trigger orders_discount_guard before insert on public.orders
+  for each row execute function public.orders_discount_guard();

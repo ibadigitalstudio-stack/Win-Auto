@@ -40,7 +40,8 @@
   function lines() {
     return Object.keys(cart).filter(function (k) { return cart[k] && cart[k].q > 0; }).map(function (k) {
       var it = cart[k];
-      return { p: { id: k, n: it.n, p: it.p, img: it.img, car: it.car, oe: it.oe }, q: it.q };
+      var WS = window.WAWholesale, price = WS && it.pb ? WS.apply(it.pb) : it.p;   // актуальна оптова знижка
+      return { p: { id: k, n: it.n, p: price, pb: it.pb || it.p, img: it.img, car: it.car, oe: it.oe }, q: it.q };
     });
   }
   function total() { return lines().reduce(function (s, l) { return s + l.p.p * l.q; }, 0); }
@@ -63,7 +64,9 @@
     }).join('');
     $('sumGoods').innerHTML = fmt(total(), cur);
     $('sumTotal').innerHTML = fmt(total(), cur);
-    $('sumNote').textContent = cur === 'UAH' ? '' : 'Оплата в гривні: ' + fmt(total(), 'UAH', true) + ' (за курсом НБУ).';
+    var disc = window.WAWholesale ? window.WAWholesale.discount() : 0;
+    $('sumNote').textContent = (disc ? 'Ціни з вашою оптовою знижкою ' + disc + '%. ' : '') +
+      (cur === 'UAH' ? '' : 'Оплата в гривні: ' + fmt(total(), 'UAH', true) + ' (за курсом НБУ).');
   }
 
   /* ---------- Довідники перевізників ---------- */
@@ -175,6 +178,18 @@
   if (profile.last) form.last.value = profile.last;
   if (profile.phone) form.phone.value = profile.phone;
   var carrier = function () { return carriers[form.carrier.value]; };
+  var isPickup = function () { return form.carrier.value === 'pickup'; };
+  // самовивіз: адреса й графік беруться з налаштувань сайту (адмін-панель → Контакти)
+  function pickupInfo() {
+    var S = window.SITE || {};
+    return { address: S.address || 'Волинська обл., с. Гаразджа, вул. Рівненська, 1', hours: S.hours || 'Пн–Сб 9:00–19:00' };
+  }
+  function showPickup() {
+    var on = isPickup(), p = pickupInfo();
+    $('cityBox').hidden = on; $('whBox').hidden = on; $('pickupBox').hidden = !on;
+    if (on) $('pickupBox').innerHTML = '<b>Адреса складу:</b> ' + esc(p.address) + '<br><b>Графік:</b> ' + esc(p.hours) +
+      '<br><small>Менеджер зателефонує, коли замовлення буде готове до видачі. Візьміть із собою номер замовлення.</small>';
+  }
 
   var whCombo = combo($('whBox'), {
     min: 0, hint: '',
@@ -209,13 +224,16 @@
     check('first', nameRe.test(f) ? '' : "Вкажіть ім'я");
     check('last', nameRe.test(l) ? '' : 'Вкажіть прізвище');
     check('phone', phoneDigits(form.phone.value) ? '' : 'Вкажіть номер у форматі +380XXXXXXXXX');
-    check('city', cityCombo.value ? '' : 'Оберіть населений пункт зі списку');
-    check('wh', whCombo.value ? '' : 'Оберіть відділення зі списку');
+    if (!isPickup()) {
+      check('city', cityCombo.value ? '' : 'Оберіть населений пункт зі списку');
+      check('wh', whCombo.value ? '' : 'Оберіть відділення зі списку');
+    }
     return ok;
   }
 
   form.addEventListener('change', function (e) {
     if (e.target.name === 'carrier') {
+      showPickup();
       cityCombo.reset('Почніть вводити назву міста');
       whCombo.reset('Спершу оберіть населений пункт', true);
       setErr('city', ''); setErr('wh', '');
@@ -238,13 +256,15 @@
       date: new Date().toISOString(),
       name: form.first.value.trim() + ' ' + form.last.value.trim(),
       phone: '+' + phoneDigits(form.phone.value),
-      carrier: carrier().title,
-      city: cityCombo.value.label,
-      warehouse: whCombo.value.label,
+      carrier: isPickup() ? 'Самовивіз' : carrier().title,
+      city: isPickup() ? pickupInfo().address : cityCombo.value.label,
+      warehouse: isPickup() ? 'Самовивіз зі складу · ' + pickupInfo().hours : whCombo.value.label,
       pay: form.pay.value,
       note: form.note.value.trim(),
-      items: lines().map(function (l) { return { id: l.p.id, oe: l.p.oe, name: l.p.n, qty: l.q, price: l.p.p }; }),
-      total: sum
+      items: lines().map(function (l) { return { id: l.p.id, base_price: l.p.pb, oe: l.p.oe, name: l.p.n, qty: l.q, price: l.p.p }; }),
+      total: sum,
+      total_base: lines().reduce(function (s, l) { return s + l.p.pb * l.q; }, 0),
+      discount: window.WAWholesale ? window.WAWholesale.discount() : 0
     };
     // Копія замовлення лишається в браузері покупця (для розділу «Мої замовлення» в кабінеті)
     var orders = store.get('orders', []);
@@ -299,6 +319,8 @@
 
   $('year').textContent = new Date().getFullYear();
   renderSummary();
+  // оптовий клієнт: підтягнути актуальну знижку й перерахувати суму
+  if (window.WAWholesale) window.WAWholesale.refresh().then(function () { if (lines().length) renderSummary(); }).catch(function () {});
   if (window.fetch) {
     fetch('https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json').then(function (r) { return r.json(); }).then(function (list) {
       var next = {};

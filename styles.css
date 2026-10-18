@@ -523,3 +523,15 @@ body.noscroll { overflow: hidden; }
   #homeGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   #homeGrid .card:nth-child(n+5) { display: none; }
 }
+
+/* Оптові ціни */
+.price s.old { font-size: .62em; color: var(--muted); font-weight: 600; text-decoration-thickness: 1.5px; margin-right: 2px; }
+
+/* Самовивіз */
+.opts--3 { grid-template-columns: repeat(3, 1fr); }
+.pickup { background: var(--bg); border: 1px solid var(--line); border-left: 4px solid var(--red); border-radius: 8px; padding: 14px 16px; line-height: 1.6; font-size: 14.5px; }
+.pickup small { color: var(--muted); }
+@media (max-width: 760px) { .opts--3 { grid-template-columns: 1fr; } }
+
+#wsBox select { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 11px 12px; color: var(--text); font: inherit; }
+#wsBox select:focus { border-color: var(--red); outline: 0; }

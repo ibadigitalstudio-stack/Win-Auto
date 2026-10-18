@@ -16,7 +16,10 @@
   var SECTIONS = [
     { group: 'Замовлення', items: [{ id: 'orders', t: 'Усі замовлення', roles: ['admin', 'manager', 'accountant'] }] },
     { group: 'Бухгалтерія', items: [{ id: 'accounting', t: 'Облік замовлень', roles: ['admin', 'accountant'] }] },
-    { group: 'Каталог', items: [{ id: 'products', t: 'Товари', roles: ['admin'] }] },
+    { group: 'Клієнти', items: [{ id: 'wholesale', t: 'Оптові клієнти', roles: ['admin'] }] },
+    { group: 'Каталог', items: [
+      { id: 'products', t: 'Товари', roles: ['admin'] },
+      { id: 'prices', t: 'Ціни та прайс-листи', roles: ['admin'] }] },
     { group: 'Сайт', items: [
       { id: 'contacts', t: 'Контакти', roles: ['admin'] },
       { id: 'texts', t: 'Головна сторінка', roles: ['admin'] },
@@ -26,7 +29,7 @@
       { id: 'users', t: 'Користувачі та ролі', roles: ['admin'] },
       { id: 'github', t: 'Підключення до GitHub', roles: ['admin'] }] }
   ];
-  var CATALOG_PANES = ['products', 'contacts', 'texts', 'bank', 'tracking'];
+  var CATALOG_PANES = ['products', 'prices', 'contacts', 'texts', 'bank', 'tracking'];
 
   var user = null, orders = [], pane = '';
   var can = {
@@ -89,7 +92,7 @@
       ? 'Користувачів додають у Supabase: розділ Authentication → Users → Add user (e-mail і пароль), потім у таблиці <code>profiles</code> — рядок з id цього користувача, іменем і роллю: <code>admin</code>, <code>manager</code> або <code>accountant</code>.'
       : '<b>Зараз демо-режим.</b> Справжніх облікових записів і паролів ще немає: ролі перемикаються на екрані входу, а замовлення — це приклади. Щоб працювали вхід за паролем і реальні замовлення із сайту, потрібно підключити сервер (файли <code>backend.js</code> і <code>supabase-setup.sql</code>).';
     renderNav();
-    loadOrders().then(function () {
+    Promise.all([loadOrders(), loadWholesale()]).then(function () {
       renderNav();
       open(firstPane());
     }).catch(function (err) { open(firstPane()); status('ordersStatus', err.message, 'bad'); });
@@ -126,7 +129,8 @@
       if (!items.length) return '';
       return '<div class="adm__group">' + s.group + '</div>' + items.map(function (i) {
         return '<button type="button" data-open="' + i.id + '"' + (i.id === pane ? ' class="on"' : '') + '><span>' + i.t + '</span>' +
-          (i.id === 'orders' && fresh ? '<em>' + fresh + '</em>' : '') + '</button>';
+          (i.id === 'orders' && fresh ? '<em>' + fresh + '</em>' : '') +
+          (i.id === 'wholesale' && wsPending() ? '<em>' + wsPending() + '</em>' : '') + '</button>';
       }).join('');
     }).join('');
   }
@@ -141,6 +145,8 @@
     if (CATALOG_PANES.indexOf(id) !== -1) window.AdminCatalog.ensure();
     if (id === 'orders') renderOrders();
     if (id === 'accounting') renderAccounting();
+    if (id === 'wholesale') renderWholesale();
+    if (id === 'prices') window.AdminCatalog.ensure().then(function () { window.AdminCatalog.prices(); });
     window.scrollTo(0, 0);
   }
   $('nav').addEventListener('click', function (e) {
@@ -191,7 +197,8 @@
       '<div><h5>Доставка</h5><p>' + esc(o.carrier) + '</p><p>' + esc(o.city) + '</p><p>' + esc(o.warehouse) + '</p></div></div>' +
       '<h5>Товари</h5><table class="req">' + (o.items || []).map(function (i) {
         return '<tr><td>' + esc(i.name) + (i.oe ? '<br><small>OE: ' + esc(i.oe) + '</small>' : '') + '</td><td class="num">' + i.qty + ' × ' + money(i.price) + '</td><td class="num"><b>' + money(i.qty * i.price) + ' грн</b></td></tr>';
-      }).join('') + '<tr><th>Разом</th><td></td><td class="num"><b>' + money(o.total) + ' грн</b></td></tr></table>' +
+      }).join('') + (o.discount ? '<tr><td>Оптова знижка ' + o.discount + '%' + (o.total_base ? ' (без знижки ' + money(o.total_base) + ' грн)' : '') + '</td><td></td><td></td></tr>' : '') +
+      '<tr><th>Разом</th><td></td><td class="num"><b>' + money(o.total) + ' грн</b></td></tr></table>' +
       '<form class="ord__form" id="orderForm">' +
       '<h5 class="wide">Обробка замовлення' + (m ? '' : ' (лише перегляд)') + '</h5>' +
       '<label class="fld">Статус<select id="fStatus"' + dis(m) + '>' + Object.keys(STATUS).map(function (k) { return '<option value="' + k + '"' + ((o.status || 'new') === k ? ' selected' : '') + '>' + STATUS[k] + '</option>'; }).join('') + '</select></label>' +
@@ -276,5 +283,63 @@
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
     a.download = 'win-auto-oblik-' + new Date().toISOString().slice(0, 10) + '.csv';
     document.body.appendChild(a); a.click(); a.remove();
+  });
+
+  /* ---------- Оптові клієнти ---------- */
+  var WSX = window.WAWholesale, clients = [], wsTab = 'pending';
+  function loadWholesale() {
+    if (BE.enabled) return BE.listWholesale().then(function (rows) { clients = rows; }).catch(function () { clients = []; });
+    clients = WSX ? WSX.demoList() : [];
+    return Promise.resolve();
+  }
+  function wsPending() { return clients.filter(function (c) { return c.status === 'pending'; }).length; }
+  function saveClient(c, patch) {
+    Object.keys(patch).forEach(function (k) { c[k] = patch[k]; });
+    if (BE.enabled) return BE.updateWholesale(c.id, patch);
+    WSX.demoSave(clients);
+    return Promise.resolve();
+  }
+  // покупки клієнта: замовлення з його акаунта або з його телефоном
+  function purchases(c) {
+    var mine = orders.filter(function (o) { return (o.status || 'new') !== 'cancelled' && ((o.customer_id && o.customer_id === c.id) || (c.phone && o.phone === c.phone)); });
+    return { n: mine.length, sum: mine.reduce(function (s, o) { return s + (+o.total || 0); }, 0) };
+  }
+  function renderWholesale() {
+    [].forEach.call(document.querySelectorAll('#wsTabs [data-ws]'), function (b) { b.classList.toggle('on', b.dataset.ws === wsTab); });
+    var list = clients.filter(function (c) { return c.status === wsTab; });
+    status('wsStatus', (BE.enabled ? '' : 'Демо-режим: тут видно заявки, подані в цьому браузері. ') + (list.length ? '' : 'Порожньо.'));
+    $('wsRows').innerHTML = list.map(function (c) {
+      var p = purchases(c);
+      var acts = c.status === 'pending'
+        ? '<button type="button" class="btn btn--sm" data-act="approve">Схвалити</button><button type="button" class="rm" style="display:inline" data-act="reject">Відхилити</button>'
+        : c.status === 'approved'
+          ? '<button type="button" class="btn btn--sm btn--ghost" data-act="save">Зберегти знижку</button><button type="button" class="rm" style="display:inline" data-act="reject">Відключити</button>'
+          : '<button type="button" class="btn btn--sm btn--ghost" data-act="approve">Схвалити</button>';
+      return '<tr data-client="' + esc(c.id) + '"><td>' + day(c.created_at) + '</td>' +
+        '<td><b>' + esc(c.last_name + ' ' + c.first_name) + '</b>' + (c.business_type ? '<br><span class="tag">' + esc(c.business_type) + '</span>' : '') + (c.company ? '<br><small>' + esc(c.company) + '</small>' : '') + '</td>' +
+        '<td>' + esc(c.phone) + '<br><small>' + esc(c.email) + '</small><br><small>' + esc(c.address) + '</small></td>' +
+        '<td class="num">' + p.n + ' зам.<br><small>' + money(p.sum) + ' грн</small></td>' +
+        '<td><input type="number" min="0" max="90" step="0.5" value="' + (+c.discount || 0) + '" data-disc aria-label="Знижка, %"></td>' +
+        '<td class="acts">' + acts + '</td></tr>';
+    }).join('');
+  }
+  $('wsTabs').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-ws]');
+    if (b) { wsTab = b.dataset.ws; renderWholesale(); }
+  });
+  $('wsRows').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-act]'), tr = e.target.closest('[data-client]');
+    if (!b || !tr) return;
+    var c = clients.filter(function (x) { return x.id === tr.dataset.client; })[0];
+    var disc = parseFloat(tr.querySelector('[data-disc]').value);
+    if (!(disc >= 0 && disc <= 90)) { status('wsStatus', 'Знижка має бути від 0 до 90%.', 'bad'); return; }
+    if (b.dataset.act === 'reject' && !confirm('Відхилити / відключити клієнта ' + c.last_name + ' ' + c.first_name + '?')) return;
+    var patch = b.dataset.act === 'reject' ? { status: 'rejected' }
+      : b.dataset.act === 'approve' ? { status: 'approved', discount: disc, approved_at: new Date().toISOString() }
+      : { discount: disc };
+    saveClient(c, patch).then(function () {
+      renderWholesale(); renderNav();
+      status('wsStatus', b.dataset.act === 'approve' ? 'Клієнта схвалено зі знижкою ' + disc + '%. Він у вкладці «Оптові клієнти».' : b.dataset.act === 'save' ? 'Знижку змінено на ' + disc + '%.' : 'Клієнта відхилено.', 'ok');
+    }).catch(function (err) { status('wsStatus', err.message, 'bad'); });
   });
 })();

@@ -153,4 +153,82 @@
   });
   $('year').textContent = new Date().getFullYear();
   renderCars();
+
+  /* ---------- Оптові клієнти ---------- */
+  var WS = window.WAWholesale, BE = window.WABackend;
+  var STAT = { pending: 'на модерації', approved: 'схвалено', rejected: 'відхилено' };
+  function wsForm(mode) {
+    var server = BE && BE.enabled;
+    if (mode === 'login') {
+      $('wsBody').innerHTML = '<form id="wsLogin" class="form" novalidate>' +
+        '<input id="wlEmail" type="email" placeholder="E-mail" autocomplete="username">' +
+        '<input id="wlPass" type="password" placeholder="Пароль" autocomplete="current-password">' +
+        '<button class="btn btn--wide" type="submit">Увійти</button></form>' +
+        '<p class="note"><button type="button" class="rm" style="display:inline" data-ws="apply">Подати заявку</button></p><p class="status" id="wsStatus"></p>';
+      return;
+    }
+    $('wsBody').innerHTML = '<form id="wsApply" class="form" novalidate>' +
+      '<div class="row2"><input id="wLast" placeholder="Прізвище *" autocomplete="family-name"><input id="wFirst" placeholder="Ім\'я *" autocomplete="given-name"></div>' +
+      '<select id="wType"><option value="">Тип діяльності *</option>' + ['СТО', 'Розборка', 'Інтернет-магазин', 'Дилер', 'Автопарк'].map(function (t) { return '<option>' + t + '</option>'; }).join('') + '</select>' +
+      '<input id="wCompany" placeholder="Назва фірми (якщо є)" autocomplete="organization">' +
+      '<input id="wAddress" placeholder="Адреса *" autocomplete="street-address">' +
+      '<div class="row2"><input id="wPhone" type="tel" placeholder="Телефон *" autocomplete="tel"><input id="wEmail" type="email" placeholder="E-mail *" autocomplete="email"></div>' +
+      (server ? '<input id="wPass" type="password" placeholder="Пароль для входу (мін. 8 символів) *" autocomplete="new-password">' : '') +
+      '<button class="btn btn--wide" type="submit">Надіслати заявку</button></form>' +
+      '<p class="note">Заявку розгляне адміністратор і призначить вашу оптову знижку.' + (server ? ' <button type="button" class="rm" style="display:inline" data-ws="login">Уже маєте акаунт? Увійти</button>' : '') + '</p>' +
+      '<p class="status" id="wsStatus"></p>';
+    var p = store.get('profile', {});
+    if (p.first) $('wFirst').value = p.first;
+    if (p.last) $('wLast').value = p.last;
+    if (p.phone) $('wPhone').value = p.phone;
+    if (p.email) $('wEmail').value = p.email;
+  }
+  function wsMsg(t, bad) { var el = $('wsStatus'); if (el) { el.textContent = t; el.style.color = bad ? 'var(--accent)' : ''; } }
+  function wsRender() {
+    var c = WS.current();
+    if (!c) {
+      $('wsBody').innerHTML = '<p class="note" style="margin:0 0 12px">СТО, магазинам і постійним покупцям — індивідуальна знижка на всі товари. Зареєструйтеся як оптовий клієнт: після перевірки адміністратор призначить вашу знижку.</p>' +
+        '<button type="button" class="btn" data-ws="apply">Зареєструватися як оптовий клієнт</button>' +
+        (BE && BE.enabled ? ' <button type="button" class="btn btn--ghost" data-ws="login">Увійти</button>' : '');
+      return;
+    }
+    var info = '<p style="margin:0 0 6px"><b>' + esc(c.last_name + ' ' + c.first_name) + '</b>' + (c.business_type ? ' · ' + esc(c.business_type) : '') + (c.company ? ' · ' + esc(c.company) : '') + '</p>' +
+      '<p class="note" style="margin:0 0 12px">' + esc(c.address) + ' · ' + esc(c.phone) + ' · ' + esc(c.email) + '</p>';
+    var st = c.status === 'approved'
+      ? '<p style="margin:0 0 12px">Статус: <b style="color:var(--ok)">оптовий клієнт</b>. Ваша знижка: <b style="font-size:20px">' + (+c.discount || 0) + '%</b> — вона вже врахована в цінах каталогу та кошика.</p>'
+      : c.status === 'rejected'
+        ? '<p style="margin:0 0 12px">Заявку <b>відхилено</b>. Якщо це помилка, зв\'яжіться з нами.</p>'
+        : '<p style="margin:0 0 12px">Заявка <b>на модерації</b>. Після схвалення тут з\'явиться ваша знижка.</p>';
+    $('wsBody').innerHTML = st + info + '<button type="button" class="rm" style="display:inline" data-ws="out">' + (BE && BE.enabled ? 'Вийти' : 'Скасувати заявку на цьому пристрої') + '</button>';
+  }
+  $('wsBox').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-ws]');
+    if (!b) return;
+    if (b.dataset.ws === 'out') { WS.signOut(); wsRender(); }
+    else wsForm(b.dataset.ws);
+  });
+  $('wsBox').addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (e.target.id === 'wsLogin') {
+      wsMsg('Вхід…');
+      WS.signIn($('wlEmail').value.trim(), $('wlPass').value).then(wsRender)
+        .catch(function (err) { wsMsg(err.message === 'Invalid login credentials' ? 'Невірний e-mail або пароль.' : err.message, true); });
+      return;
+    }
+    var f = {
+      last_name: $('wLast').value.trim(), first_name: $('wFirst').value.trim(), business_type: $('wType').value, company: $('wCompany').value.trim(),
+      address: $('wAddress').value.trim(), phone: $('wPhone').value.trim(), email: $('wEmail').value.trim(),
+      password: $('wPass') ? $('wPass').value : ''
+    };
+    var d = f.phone.replace(/\D/g, ''); if (d.length === 10 && d[0] === '0') d = '38' + d;
+    if (!f.last_name || !f.first_name || !f.address) { wsMsg('Заповніть прізвище, ім\'я та адресу.', true); return; }
+    if (!f.business_type) { wsMsg('Оберіть тип діяльності.', true); return; }
+    if (!/^380\d{9}$/.test(d)) { wsMsg('Вкажіть телефон у форматі +380XXXXXXXXX.', true); return; }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email)) { wsMsg('Вкажіть правильний e-mail.', true); return; }
+    if ($('wPass') && f.password.length < 8) { wsMsg('Пароль має містити щонайменше 8 символів.', true); return; }
+    f.phone = '+' + d;
+    wsMsg('Надсилання…');
+    WS.register(f).then(wsRender).catch(function (err) { wsMsg(err.message, true); });
+  });
+  if (WS) { wsRender(); WS.refresh().then(wsRender).catch(function () {}); } else $('wsBox').hidden = true;
 })();

@@ -97,6 +97,10 @@
     return c.after ? s + ' <small>' + c.sign + '</small>' : '<small>' + c.sign + '</small>' + s;
   }
   var money = function (uah) { return fmt(uah, cur); };
+  // оптова знижка схваленого клієнта (wholesale.js)
+  var WS = window.WAWholesale;
+  var sale = function (v) { return WS ? WS.apply(v) : v; };
+  var priceHtml = function (v) { var s = sale(v); return s !== v ? '<s class="old">' + money(v) + '</s> ' + money(s) : money(v); };
   function altPrices(uah) {
     return Object.keys(CUR).filter(function (c) { return c !== cur; }).map(function (c) {
       return fmt(uah, c).replace(/<\/?small>/g, '');
@@ -172,7 +176,7 @@
       (p.d ? '<span class="card__meta">' + esc(p.d) + '</span>' : '') +
       '<span class="card__meta">' + numLine(p) + '</span>' +
       '<span class="stock' + (p.s ? '' : ' stock--no') + '">' + (p.s ? '● В наявності' : '● Під замовлення') + '</span>' +
-      '<div class="card__f"><span class="price">' + money(p.p) + '</span>' +
+      '<div class="card__f"><span class="price">' + priceHtml(p.p) + '</span>' +
       '<button type="button" class="btn btn--sm" data-add="' + p.id + '">У кошик</button></div>' +
       '</div></article>';
   }
@@ -323,11 +327,11 @@
       }).join('') + '</div>' : '') +
       '<h5>Підходить для</h5><ul class="fits">' + p.cars.map(function (c) { return '<li>' + esc(c[0] + ' ' + c[1]) + '</li>'; }).join('') + '</ul>' +
       (an.length ? '<h5>Інші деталі з цим номером</h5>' + an.map(function (x) {
-        return '<button type="button" class="analog" data-open="' + x.id + '"><span>' + esc(x.n + ' · ' + (x.o ? 'оригінал' : 'аналог')) + '</span><b>' + money(x.p) + '</b></button>';
+        return '<button type="button" class="analog" data-open="' + x.id + '"><span>' + esc(x.n + ' · ' + (x.o ? 'оригінал' : 'аналог')) + '</span><b>' + money(sale(x.p)) + '</b></button>';
       }).join('') : '') +
       '<table>' + rows.map(function (r) { return '<tr><th>' + esc(r[0]) + '</th><td>' + esc(r[1]) + '</td></tr>'; }).join('') + '</table>' +
       '<span class="stock' + (p.s ? '' : ' stock--no') + '">' + (p.s ? '● В наявності' : '● Під замовлення') + '</span>' +
-      '<div class="pv__buy"><span class="price">' + money(p.p) + '<span class="price__alt">≈ ' + altPrices(p.p) + '</span></span>' +
+      '<div class="pv__buy"><span class="price">' + priceHtml(p.p) + '<span class="price__alt">' + (sale(p.p) !== p.p ? 'Оптова ціна, знижка ' + WS.discount() + '% · ' : '≈ ') + altPrices(sale(p.p)) + '</span></span>' +
       '<button type="button" class="btn" data-add="' + p.id + '">Додати в кошик</button></div>' +
       '</div></div>';
     $('modal').hidden = false;
@@ -362,7 +366,7 @@
     if (!it) {
       var p = byId[k];
       if (!p || d <= 0) return;
-      it = cart[k] = { q: 0, n: p.n, p: p.p, img: p.img, car: p.cars[0].join(' '), oe: p.oe.join(' / ') };
+      it = cart[k] = { q: 0, n: p.n, p: sale(p.p), pb: p.p, img: p.img, car: p.cars[0].join(' '), oe: p.oe.join(' / ') };
     }
     if (d > 0 && window.WATrack) window.WATrack('add_to_cart', it.p, [{ item_id: k, item_name: it.n, quantity: 1, price: it.p }]);
     it.q += d;
@@ -607,4 +611,17 @@
   }
   renderCart();
   loadRates();
+  // після перевірки статусу оптового клієнта перемальовуємо ціни, якщо знижка змінилась
+  if (WS) {
+    var before = WS.discount();
+    WS.refresh().then(function () {
+      var now = WS.discount();
+      if (now !== before) {
+        // кошик: перераховуємо ціни за поточною знижкою
+        Object.keys(cart).forEach(function (k) { var it = cart[k]; if (it.pb) it.p = WS.apply(it.pb); });
+        store.set('cart', cart);
+        renderPrices();
+      }
+    }).catch(function () {});
+  }
 })();

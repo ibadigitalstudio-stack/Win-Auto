@@ -7,7 +7,7 @@
 <script>
   try { document.documentElement.dataset.theme = localStorage.getItem('winauto-theme') || 'dark'; } catch (e) {}
 </script>
-<link rel="stylesheet" href="styles.css?v=24">
+<link rel="stylesheet" href="styles.css?v=28">
 </head>
 <body>
 
@@ -67,12 +67,15 @@
 
       <section class="box">
         <h2><span class="step">2</span>Спосіб доставки</h2>
-        <div class="opts">
+        <div class="opts opts--3">
           <label class="opt"><input type="radio" name="carrier" value="np" checked>
             <span><b>Нова Пошта</b><small>Доставка у відділення або поштомат</small></span></label>
           <label class="opt"><input type="radio" name="carrier" value="del">
             <span><b>Делівері</b><small>Доставка на склад-відділення, зручно для великих деталей</small></span></label>
+          <label class="opt"><input type="radio" name="carrier" value="pickup">
+            <span><b>Самовивіз</b><small>Безкоштовно, зі складу Win Auto</small></span></label>
         </div>
+        <div class="pickup" id="pickupBox" hidden></div>
 
         <div class="fld combo" id="cityBox">
           <label for="city">Населений пункт</label>
@@ -137,10 +140,11 @@
   <div class="wrap footer__copy">© <span id="year"></span> Win Auto. Усі права захищені.</div>
 </footer>
 
-<script src="site.js?v=24"></script>
-<script src="products.js?v=24"></script>
-<script src="menu.js?v=24"></script>
-<script src="backend.js?v=24"></script>
-<script src="checkout.js?v=24"></script>
+<script src="site.js?v=28"></script>
+<script src="products.js?v=28"></script>
+<script src="menu.js?v=28"></script>
+<script src="backend.js?v=28"></script>
+<script src="wholesale.js?v=28"></script>
+<script src="checkout.js?v=28"></script>
 </body>
 </html>

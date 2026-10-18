@@ -8,8 +8,8 @@
 <script>
   try { document.documentElement.dataset.theme = localStorage.getItem('winauto-theme') || 'dark'; } catch (e) {}
 </script>
-<link rel="stylesheet" href="styles.css?v=24">
-<link rel="stylesheet" href="admin.css?v=24">
+<link rel="stylesheet" href="styles.css?v=28">
+<link rel="stylesheet" href="admin.css?v=28">
 </head>
 <body class="admin">
 
@@ -97,6 +97,56 @@
             <thead><tr><th>№</th><th>Дата</th><th>Клієнт</th><th>Спосіб оплати</th><th>Сума, грн</th><th>Оплачено</th><th>Дата оплати</th><th>№ документа</th></tr></thead>
             <tbody id="accRows"></tbody>
           </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Оптові клієнти -->
+    <section data-pane="wholesale" hidden>
+      <h1>Оптові клієнти</h1>
+      <div class="adm__tabs" id="wsTabs">
+        <button type="button" class="on" data-ws="pending">Заявки на модерації</button>
+        <button type="button" data-ws="approved">Оптові клієнти</button>
+        <button type="button" data-ws="rejected">Відхилені</button>
+      </div>
+      <div class="box">
+        <div class="tbl__wrap">
+          <table class="tbl">
+            <thead><tr><th>Дата</th><th>Клієнт</th><th>Контакти й адреса</th><th>Покупки</th><th>Знижка, %</th><th></th></tr></thead>
+            <tbody id="wsRows"></tbody>
+          </table>
+        </div>
+        <p class="status" id="wsStatus"></p>
+      </div>
+    </section>
+
+    <!-- Ціни та прайс-листи -->
+    <section data-pane="prices" hidden>
+      <h1>Ціни та прайс-листи</h1>
+      <div class="box">
+        <h2>Вибір товарів</h2>
+        <div class="adm__row">
+          <label class="fld">Марка<select id="pBrand"></select></label>
+          <label class="fld">Модель<select id="pModel"></select></label>
+          <label class="fld">Категорія<select id="pCat"></select></label>
+        </div>
+        <label class="chk" style="margin-top:12px"><input type="checkbox" id="pStock" checked> Лише товари в наявності</label>
+        <div class="adm__row" style="margin-top:12px">
+          <label class="fld">Зміна ціни, %<input id="pPct" type="number" step="0.1" value="0" placeholder="напр. 5 або -10"></label>
+          <label class="fld">Округлення<select id="pRound"><option value="1">до 1 грн</option><option value="10">до 10 грн</option><option value="0">без округлення</option></select></label>
+        </div>
+        <p class="status" id="pInfo"></p>
+      </div>
+      <div class="kpis">
+        <div class="box" style="margin:0">
+          <h2>Прайс-лист</h2>
+          <p class="help" style="margin-top:0">Файл для Excel із вибраними товарами. Ціни у файлі змінюються на вказаний відсоток, на сайті — ні. Зручно для оптових клієнтів і партнерів.</p>
+          <button class="btn" type="button" id="pList">Сформувати прайс-лист</button>
+        </div>
+        <div class="box" style="margin:0">
+          <h2>Змінити ціни на сайті</h2>
+          <p class="help" style="margin-top:0">Ціни всіх вибраних товарів зміняться на вказаний відсоток. Зміни з'являться на сайті після кнопки «Опублікувати на сайті».</p>
+          <button class="btn btn--ghost" type="button" id="pApply">Змінити ціни</button>
         </div>
       </div>
     </section>
@@ -270,8 +320,9 @@
   </div>
 </div>
 
-<script src="backend.js?v=24"></script>
-<script src="admin.js?v=24"></script>
-<script src="admin-shell.js?v=24"></script>
+<script src="backend.js?v=28"></script>
+<script src="wholesale.js?v=28"></script>
+<script src="admin.js?v=28"></script>
+<script src="admin-shell.js?v=28"></script>
 </body>
 </html>
