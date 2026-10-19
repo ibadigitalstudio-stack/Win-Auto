@@ -153,3 +153,11 @@ end $$;
 drop trigger if exists orders_discount_guard on public.orders;
 create trigger orders_discount_guard before insert on public.orders
   for each row execute function public.orders_discount_guard();
+
+-- Доступ сайту до таблиць (які саме рядки — визначають правила вище)
+grant usage on schema public to anon, authenticated;
+grant insert on public.orders to anon;
+grant select, insert, update on public.orders to authenticated;
+grant select on public.profiles to authenticated;
+grant select, insert, update on public.wholesale_clients to authenticated;
+grant execute on function public.my_role() to anon, authenticated;

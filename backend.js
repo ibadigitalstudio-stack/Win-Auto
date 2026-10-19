@@ -3,7 +3,7 @@
 // а в адмін-панелі вхід без пароля з вибором ролі.
 // Після створення проєкту Supabase впишіть сюди Project URL і публічний ключ (anon / publishable key).
 // Це не секрет: ключ призначений для сайту, а доступ до даних обмежують правила з файлу supabase-setup.sql.
-window.BACKEND = { url: '', key: '' };
+window.BACKEND = { url: 'https://qqlnhbnhkzvhlsxgmfxl.supabase.co', key: 'sb_publishable_arCc0EGMW4ivOiBlf1zH6w__Vc1i93p' };
 
 // Спільний клієнт для сторінки оформлення замовлення та адмін-панелі
 window.WABackend = (function () {
