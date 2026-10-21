@@ -478,8 +478,9 @@
     // Код підтвердження Search Console має бути просто в HTML головної сторінки, тому оновлюємо index.html
     var gsc = (site.tracking || {}).gsc || '';
     var prep = siteDirty && gsc !== gscPublished ? readFile('index.html').then(function (html) {
-      html = html.replace(/\s*<meta name="google-site-verification"[^>]*>/g, '');
-      if (gsc) html = html.replace('<meta charset="utf-8">', '<meta charset="utf-8">\n<meta name="google-site-verification" content="' + gsc + '">');
+      // замінюємо лише тег Search Console з адмін-панелі (data-wa="gsc"); інші теги підтвердження (Merchant Center) не чіпаємо
+      html = html.replace(/\s*<meta name="google-site-verification"[^>]*data-wa="gsc"[^>]*>/g, '');
+      if (gsc) html = html.replace('<meta charset="utf-8">', '<meta charset="utf-8">\n<meta name="google-site-verification" data-wa="gsc" content="' + gsc + '">');
       files.push({ path: 'index.html', content: html, encoding: 'utf-8' });
     }) : Promise.resolve();
     prep.then(function () { return gh('/git/ref/heads/' + cfg.branch); }).then(function (ref) {
