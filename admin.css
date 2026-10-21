@@ -99,3 +99,59 @@ body.admin { padding-bottom: 70px; }
 .perms label { display: flex; gap: 8px; align-items: center; cursor: pointer; }
 .perms input { accent-color: var(--red); width: 17px; height: 17px; }
 .perms input:disabled + span { color: var(--muted); }
+
+
+/* ---------- Мобільна адмін-панель: розділи в бічному меню, таблиці — картками ---------- */
+.adm__sidehead, .adm__sidefoot, .adm__shade, .adm__burger { display: none; }
+@media (max-width: 900px) {
+  body.admin { padding-bottom: 90px; }
+  .adm__burger:not([hidden]) { display: grid; }
+  .adm__user, #logout { display: none !important; }
+  .adm { display: block; padding-top: 16px; }
+  .adm__sidebtn { display: none !important; }
+  .adm__side, .adm__side:not(.open) nav { display: flex; }
+  .adm__side {
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 80; width: min(300px, 86vw);
+    flex-direction: column; border: 0; border-right: 3px solid var(--red); border-radius: 0;
+    overflow-y: auto; transform: translateX(-105%); transition: transform .2s ease-out;
+  }
+  .adm__side.open { transform: none; box-shadow: var(--shadow); }
+  .adm__shade:not([hidden]) { display: block; position: fixed; inset: 0; z-index: 79; background: rgba(0, 0, 0, .55); }
+  .adm__sidehead { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+  .adm__sideuser { display: grid; line-height: 1.25; }
+  .adm__sideuser small { color: var(--accent); font-weight: 700; font-size: 12px; }
+  .adm__side nav { flex-direction: column; flex: 1; }
+  .adm__side nav button { padding: 13px 16px 13px 13px; font-size: 15.5px; }
+  .adm__sidefoot { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px 20px; border-top: 1px solid var(--line); font-size: 14px; }
+  .adm__sidefoot a { color: var(--accent); font-weight: 700; }
+  .adm__main h1 { font-size: 21px; margin-bottom: 14px; }
+  .adm .box { padding: 14px; }
+  .adm__row .fld { flex-basis: 100%; }
+  .adm__row > .btn { width: 100%; }
+  .kpis { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .kpi { padding: 12px; }
+  .kpi b { font-size: 18px; }
+  .adm__tabs { overflow-x: auto; flex-wrap: nowrap; }
+  .adm__tabs button { white-space: nowrap; }
+  .bar__in { gap: 8px; }
+  .bar__in > span:last-child { display: flex; gap: 8px; width: 100%; }
+  .bar__in > span:last-child .btn { flex: 1; padding: 11px 8px; }
+  .modal { padding: 18px 14px; }
+}
+@media (max-width: 700px) {
+  /* кожен рядок таблиці — окрема картка з підписами полів */
+  .adm .tbl thead { display: none; }
+  .adm .tbl, .adm .tbl tbody { display: block; }
+  .adm .tbl tr { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .adm .tbl td { display: block; padding: 0; border: 0; min-width: 0; }
+  .adm .tbl td[data-label]::before { content: attr(data-label); display: block; font-size: 10.5px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+  .adm .tbl td:nth-child(2), .adm .tbl td.acts { grid-column: 1 / -1; }
+  .adm .tbl td.acts { text-align: left; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .adm .tbl td.acts button { margin: 0; }
+  .adm .tbl td.num { text-align: left; }
+  .adm .tbl td .empty, .adm .tbl td.empty { grid-column: 1 / -1; }
+  .adm .tbl input[type="number"], .adm .tbl input[type="text"], .adm .tbl input[type="date"], .adm .tbl select { width: 100%; max-width: none; }
+  .adm .tbl tr.click:hover td { background: none; }
+  .adm .tbl img { width: 64px; height: 64px; }
+  .ord .req tr { grid-template-columns: 1fr auto; }
+}

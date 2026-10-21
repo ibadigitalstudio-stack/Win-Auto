@@ -100,7 +100,10 @@
     $('app').hidden = false;
     $('userBox').hidden = false; $('logout').hidden = false;
     $('userName').textContent = u.name;
+    $('sideName').textContent = u.name;
+    $('admBurger').hidden = false;
     $('userRole').textContent = ROLES[u.role] + (BE.enabled ? '' : ' · демо');
+    $('sideRole').textContent = $('userRole').textContent;
     $('usersHelp').innerHTML = BE.enabled
       ? 'Працівник входить на цій сторінці з e-mail і паролем, які ви йому задали. Пароль передайте особисто; змінити його можна кнопкою «Змінити пароль».'
       : '<b>Зараз демо-режим.</b> Справжніх облікових записів і паролів ще немає: ролі перемикаються на екрані входу, а замовлення — це приклади. Щоб працювали вхід за паролем і реальні замовлення із сайту, потрібно підключити сервер (файли <code>backend.js</code> і <code>supabase-setup.sql</code>).';
@@ -155,7 +158,7 @@
     if (!ok) return;   // розділ недоступний для цієї ролі
     pane = id;
     [].forEach.call(document.querySelectorAll('[data-pane]'), function (p) { p.hidden = p.dataset.pane !== id; });
-    document.querySelector('.adm__side').classList.remove('open');
+    side(false);
     renderNav();
     if (CATALOG_PANES.indexOf(id) !== -1) window.AdminCatalog.ensure();
     if (id === 'orders') renderOrders();
@@ -169,7 +172,28 @@
     var b = e.target.closest('[data-open]');
     if (b) open(b.dataset.open);
   });
-  $('sideToggle').addEventListener('click', function () { document.querySelector('.adm__side').classList.toggle('open'); });
+  // Мобільне бічне меню з розділами
+  function side(open) {
+    $('admSide').classList.toggle('open', open);
+    $('admShade').hidden = !open;
+    document.body.classList.toggle('noscroll', open);
+  }
+  $('admBurger').addEventListener('click', function () { side(true); });
+  $('admClose').addEventListener('click', function () { side(false); });
+  $('admShade').addEventListener('click', function () { side(false); });
+  $('sideLogout').addEventListener('click', function () { $('logout').click(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') side(false); });
+  // підписи колонок для карткового вигляду таблиць на телефоні
+  function labelTables() {
+    [].forEach.call(document.querySelectorAll('.adm .tbl'), function (t) {
+      var heads = [].map.call(t.querySelectorAll('thead th'), function (th) { return th.textContent.trim(); });
+      if (!heads.length) return;
+      [].forEach.call(t.querySelectorAll('tbody tr'), function (tr) {
+        [].forEach.call(tr.children, function (td, i) { if (heads[i] && !td.hasAttribute('data-label')) td.setAttribute('data-label', heads[i]); });
+      });
+    });
+  }
+  new MutationObserver(labelTables).observe(document.getElementById('app'), { childList: true, subtree: true });
 
   /* ---------- Замовлення ---------- */
   var tag = function (st) { st = st || 'new'; return '<span class="tag tag--' + st + '">' + STATUS[st] + '</span>'; };

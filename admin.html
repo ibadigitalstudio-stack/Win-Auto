@@ -8,13 +8,14 @@
 <script>
   try { document.documentElement.dataset.theme = localStorage.getItem('winauto-theme') || 'dark'; } catch (e) {}
 </script>
-<link rel="stylesheet" href="styles.css?v=34">
-<link rel="stylesheet" href="admin.css?v=34">
+<link rel="stylesheet" href="styles.css?v=35">
+<link rel="stylesheet" href="admin.css?v=35">
 </head>
 <body class="admin">
 
 <header class="header">
   <div class="wrap header__in">
+    <button type="button" class="burger adm__burger" id="admBurger" aria-label="Розділи адмін-панелі" hidden><span></span><span></span><span></span></button>
     <a href="index.html" class="logo" aria-label="Win Auto">
       <span class="logo__mark"><i></i><i></i><i></i></span>
       <span class="logo__txt">WIN<b>AUTO</b></span>
@@ -51,9 +52,14 @@
 
 <!-- Панель -->
 <div class="wrap adm" id="app" hidden>
-  <aside class="adm__side">
-    <button type="button" class="adm__sidebtn" id="sideToggle">Розділи ▾</button>
+  <div class="adm__shade" id="admShade" hidden></div>
+  <aside class="adm__side" id="admSide" aria-label="Розділи адмін-панелі">
+    <div class="adm__sidehead">
+      <span class="adm__sideuser"><b id="sideName"></b><small id="sideRole"></small></span>
+      <button type="button" class="x" id="admClose" aria-label="Закрити">×</button>
+    </div>
     <nav id="nav"></nav>
+    <div class="adm__sidefoot"><a href="index.html">← Відкрити сайт</a><button type="button" class="rm" id="sideLogout" style="display:inline">Вийти</button></div>
   </aside>
 
   <main class="adm__main">
@@ -361,9 +367,9 @@
   </div>
 </div>
 
-<script src="backend.js?v=34"></script>
-<script src="wholesale.js?v=34"></script>
-<script src="admin.js?v=34"></script>
-<script src="admin-shell.js?v=34"></script>
+<script src="backend.js?v=35"></script>
+<script src="wholesale.js?v=35"></script>
+<script src="admin.js?v=35"></script>
+<script src="admin-shell.js?v=35"></script>
 </body>
 </html>
