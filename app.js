@@ -599,6 +599,25 @@
     $('more').addEventListener('click', function () { state.shown += PAGE; renderGrid(); });
     if (window.matchMedia('(max-width: 980px)').matches) $('sideBox').open = false;
     update();
+    // пряме посилання на товар (catalog.html?...&p=<id>) — для Google Merchant Center і поширення
+    var pid = params.get('p');
+    if (pid) (state.brand ? loadBrand(state.brand) : loadAll()).then(function () {
+      var p = byId[pid];
+      if (!p) return;
+      openProduct(pid);
+      document.title = p.n + ' — Win Auto';
+      var ld = document.createElement('script');
+      ld.type = 'application/ld+json';
+      ld.textContent = JSON.stringify({
+        '@context': 'https://schema.org', '@type': 'Product', name: p.n, sku: p.id,
+        image: p.img ? location.origin + '/' + p.img : undefined,
+        description: p.n + (p.d ? '. ' + p.d : '') + '. Підходить для: ' + p.cars.map(function (c) { return c.join(' '); }).join(', '),
+        mpn: p.oe[0] || undefined, brand: { '@type': 'Brand', name: 'Win Auto' },
+        offers: { '@type': 'Offer', price: Math.round(p.p), priceCurrency: 'UAH', itemCondition: 'https://schema.org/NewCondition',
+          availability: p.s ? 'https://schema.org/InStock' : 'https://schema.org/BackOrder', url: location.href }
+      });
+      document.head.appendChild(ld);
+    });
   } else {
     $('fBrand').addEventListener('change', fillFinderModels);
     fillFinder();
