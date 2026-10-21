@@ -61,6 +61,13 @@
     h1.appendChild(sp);
   }
   if (sub && S.heroSub) sub.textContent = S.heroSub;
+  // реквізити продавця (договір оферти) — з розділу «Реквізити оплати» адмін-панелі
+  var bank = S.bank || {};
+  [].forEach.call(document.querySelectorAll('[data-bank]'), function (el) {
+    var k = el.getAttribute('data-bank');
+    var v = bank[k];
+    if (v) el.textContent = v;
+  });
 })();
 
 // Навігація в шапці: мега-меню «Каталог» (комп'ютер) і бічне меню (телефон)

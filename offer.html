@@ -7,7 +7,7 @@
 <script>
   try { document.documentElement.dataset.theme = localStorage.getItem('winauto-theme') || 'dark'; } catch (e) {}
 </script>
-<link rel="stylesheet" href="styles.css?v=36">
+<link rel="stylesheet" href="styles.css?v=38">
 </head>
 <body>
 
@@ -78,9 +78,10 @@
 <p>10.1. Спори вирішуються шляхом переговорів, а якщо згоди не досягнуто — у порядку, встановленому законодавством України.</p>
 <h2>11. Реквізити Продавця</h2>
 <table class="req">
-  <tr><th>Продавець</th><td>[вкажіть назву ФОП або ТОВ]</td></tr>
-  <tr><th>ЄДРПОУ / ІПН</th><td>[вкажіть код]</td></tr>
-  <tr><th>Адреса</th><td>[вкажіть юридичну адресу]</td></tr>
+  <tr><th>Продавець</th><td data-bank="name">[вкажіть назву ФОП або ТОВ]</td></tr>
+  <tr><th>ЄДРПОУ / ІПН</th><td data-bank="code">[вкажіть код]</td></tr>
+  <tr><th>IBAN</th><td data-bank="iban">—</td></tr>
+  <tr><th>Банк</th><td data-bank="bank">—</td></tr>
   <tr><th>Телефон</th><td><a href="tel:+380930210975">+38 (093) 021-09-75</a></td></tr>
   <tr><th>E-mail</th><td><a href="mailto:info@win-auto.com.ua">info@win-auto.com.ua</a></td></tr>
 </table>
@@ -108,9 +109,9 @@
   <div class="wrap footer__copy">© <span id="year"></span> Win Auto. Усі права захищені.</div>
 </footer>
 
-<script src="site.js?v=36"></script>
-<script src="products.js?v=36"></script>
-<script src="menu.js?v=36"></script>
-<script src="info.js?v=36"></script>
+<script src="site.js?v=38"></script>
+<script src="products.js?v=38"></script>
+<script src="menu.js?v=38"></script>
+<script src="info.js?v=38"></script>
 </body>
 </html>
