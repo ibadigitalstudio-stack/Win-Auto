@@ -8,8 +8,8 @@
 <script>
   try { document.documentElement.dataset.theme = localStorage.getItem('winauto-theme') || 'dark'; } catch (e) {}
 </script>
-<link rel="stylesheet" href="styles.css?v=30">
-<link rel="stylesheet" href="admin.css?v=30">
+<link rel="stylesheet" href="styles.css?v=34">
+<link rel="stylesheet" href="admin.css?v=34">
 </head>
 <body class="admin">
 
@@ -231,16 +231,33 @@
 
     <!-- Користувачі -->
     <section data-pane="users" hidden>
-      <h1>Користувачі та ролі</h1>
+      <h1>Працівники та доступи</h1>
       <div class="box">
+        <div class="adm__row" style="justify-content:space-between">
+          <p class="help" style="margin:0">Додавайте працівників, призначайте роль і за потреби — додаткові права понад роль.</p>
+          <button class="btn" type="button" id="staffAdd">+ Додати працівника</button>
+        </div>
+        <p class="status" id="staffStatus"></p>
+      </div>
+      <div class="box">
+        <div class="tbl__wrap">
+          <table class="tbl">
+            <thead><tr><th>Працівник</th><th>Роль</th><th>Додаткові права</th><th>Статус</th><th></th></tr></thead>
+            <tbody id="staffRows"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="box">
+        <h2>Що дає кожна роль</h2>
         <table class="tbl">
-          <thead><tr><th>Роль</th><th>Замовлення</th><th>Облік</th><th>Товари</th><th>Тексти й контакти</th><th>Доступи</th></tr></thead>
+          <thead><tr><th>Роль</th><th>Замовлення</th><th>Облік</th><th>Оптові клієнти</th><th>Товари й ціни</th><th>Сайт</th><th>Працівники</th></tr></thead>
           <tbody>
-            <tr><td><b>Адміністратор</b></td><td>повний</td><td>повний</td><td>повний</td><td>повний</td><td>повний</td></tr>
-            <tr><td><b>Менеджер</b></td><td>статуси, ТТН, нотатки</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
-            <tr><td><b>Бухгалтер</b></td><td>перегляд</td><td>оплати, документи, звіт</td><td>—</td><td>—</td><td>—</td></tr>
+            <tr><td><b>Адміністратор</b></td><td>повний</td><td>повний</td><td>повний</td><td>повний</td><td>повний</td><td>повний</td></tr>
+            <tr><td><b>Менеджер</b></td><td>статуси, ТТН, нотатки</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+            <tr><td><b>Бухгалтер</b></td><td>перегляд</td><td>оплати, документи, звіт</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
           </tbody>
         </table>
+        <p class="help">Додаткові права відкривають працівнику відповідний розділ на додачу до його ролі. Наприклад, менеджеру можна дати «Облік і оплати», а бухгалтеру — «Оптові клієнти та знижки». Розділ «Працівники» доступний лише адміністраторам.</p>
       </div>
       <div class="box help" id="usersHelp"></div>
     </section>
@@ -278,6 +295,30 @@
   <div class="modal" role="dialog" aria-modal="true">
     <button class="x" type="button" data-close aria-label="Закрити">×</button>
     <div id="orderBody"></div>
+  </div>
+</div>
+
+<!-- Працівник -->
+<div class="overlay" id="staffModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" style="max-width:620px">
+    <button class="x" type="button" data-close aria-label="Закрити">×</button>
+    <form id="staffForm" class="frm" novalidate>
+      <h2 class="wide" id="staffTitle" style="margin:0 0 14px">Новий працівник</h2>
+      <label class="fld">Ім'я<input id="stName" autocomplete="off"></label>
+      <label class="fld">E-mail для входу<input id="stEmail" type="email" autocomplete="off"></label>
+      <label class="fld">Роль<select id="stRole"><option value="manager">Менеджер</option><option value="accountant">Бухгалтер</option><option value="admin">Адміністратор</option></select></label>
+      <label class="fld" id="stPassBox">Пароль <i>(мін. 8 символів)</i><input id="stPass" type="text" autocomplete="new-password"></label>
+      <div class="fld wide">Додаткові права
+        <div class="perms" id="stPerms"></div>
+      </div>
+      <label class="chk wide" id="stActiveBox"><input type="checkbox" id="stActive" checked> Обліковий запис активний (вимкнений працівник не може увійти)</label>
+      <div class="wide cab__actions">
+        <button class="btn" type="submit">Зберегти</button>
+        <button class="btn btn--ghost" type="button" id="stPassBtn">Змінити пароль</button>
+        <button class="rm" type="button" id="stDelete" style="display:inline">Видалити працівника</button>
+        <span class="status" id="stStatus"></span>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -320,9 +361,9 @@
   </div>
 </div>
 
-<script src="backend.js?v=30"></script>
-<script src="wholesale.js?v=30"></script>
-<script src="admin.js?v=30"></script>
-<script src="admin-shell.js?v=30"></script>
+<script src="backend.js?v=34"></script>
+<script src="wholesale.js?v=34"></script>
+<script src="admin.js?v=34"></script>
+<script src="admin-shell.js?v=34"></script>
 </body>
 </html>

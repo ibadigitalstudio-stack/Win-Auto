@@ -4,6 +4,8 @@
 // Після створення проєкту Supabase впишіть сюди Project URL і публічний ключ (anon / publishable key).
 // Це не секрет: ключ призначений для сайту, а доступ до даних обмежують правила з файлу supabase-setup.sql.
 window.BACKEND = { url: 'https://qqlnhbnhkzvhlsxgmfxl.supabase.co', key: 'sb_publishable_arCc0EGMW4ivOiBlf1zH6w__Vc1i93p' };
+// Онлайн-оплата monobank: true — після налаштування функцій mono-invoice та mono-webhook у Supabase
+window.BACKEND.mono = true;
 
 // Спільний клієнт для сторінки оформлення замовлення та адмін-панелі
 window.WABackend = (function () {
@@ -34,17 +36,28 @@ window.WABackend = (function () {
         customer_id: (loadClient() || { user: {} }).user.id || null
       }, { 'Prefer': 'return=minimal' });
     },
+    // онлайн-оплата monobank: рахунок створює серверна функція (там же перевіряється сума)
+    monoEnabled: on && !!B.mono,
+    monoInvoice: function (orderId) { return call('/functions/v1/mono-invoice', 'POST', { orderId: orderId }); },
+    monoStatus: function (orderId) { return call('/functions/v1/mono-invoice', 'POST', { orderId: orderId, check: true }); },
     // співробітник: вхід за e-mail і паролем, роль береться з таблиці profiles
     login: function (email, password) {
       return call('/auth/v1/token?grant_type=password', 'POST', { email: email, password: password }).then(function (s) {
         session = s;
-        return call('/rest/v1/profiles?select=role,name&id=eq.' + s.user.id);
+        return call('/rest/v1/profiles?select=*&id=eq.' + s.user.id);
       }).then(function (rows) {
         if (!rows.length) { session = null; throw new Error('Для цього користувача не призначено роль.'); }
-        return { email: session.user.email, role: rows[0].role, name: rows[0].name || session.user.email };
+        if (rows[0].active === false) { session = null; throw new Error('Обліковий запис вимкнено адміністратором.'); }
+        return { id: session.user.id, email: session.user.email, role: rows[0].role, perms: rows[0].perms || [], name: rows[0].name || session.user.email };
       });
     },
     logout: function () { session = null; },
+    // керування працівниками (серверна функція staff-admin, лише для адміністратора)
+    staff: function (action, data) {
+      var body = { action: action };
+      Object.keys(data || {}).forEach(function (k) { body[k] = data[k]; });
+      return call('/functions/v1/staff-admin', 'POST', body);
+    },
     listOrders: function () { return call('/rest/v1/orders?select=*&order=created_at.desc&limit=2000'); },
     // --- оптові клієнти ---
     // реєстрація: акаунт + заявка зі статусом «на модерації»

@@ -186,6 +186,9 @@
   }
   function showPickup() {
     var on = isPickup(), p = pickupInfo();
+    // при самовивозі «накладений платіж» означає оплату на складі
+    $('codNote').textContent = on ? 'Оплата готівкою або карткою під час отримання на складі.'
+      : 'Оплата при отриманні у відділенні перевізника. Перевізник стягує комісію за переказ коштів.';
     $('cityBox').hidden = on; $('whBox').hidden = on; $('pickupBox').hidden = !on;
     if (on) $('pickupBox').innerHTML = '<b>Адреса складу:</b> ' + esc(p.address) + '<br><b>Графік:</b> ' + esc(p.hours) +
       '<br><small>Менеджер зателефонує, коли замовлення буде готове до видачі. Візьміть із собою номер замовлення.</small>';
@@ -271,13 +274,55 @@
     orders.push(order);
     store.set('orders', orders);
     // якщо підключено сервер замовлень — надсилаємо замовлення туди (його побачать менеджер і бухгалтер)
-    if (window.WABackend && window.WABackend.enabled) window.WABackend.createOrder(order).catch(function () {});
     if (!profile.first && !profile.phone) store.set('profile', { first: form.first.value.trim(), last: form.last.value.trim(), phone: order.phone, email: '' });
-    store.set('cart', {});
-    cart = {};
-    if (window.WATrack) window.WATrack('purchase', order.total, order.items.map(function (i) { return { item_id: i.id, item_name: i.name, quantity: i.qty, price: i.price }; }));
+    var BE = window.WABackend;
+    var finish = function () {
+      store.set('cart', {});
+      cart = {};
+      if (window.WATrack) window.WATrack('purchase', order.total, order.items.map(function (i) { return { item_id: i.id, item_name: i.name, quantity: i.qty, price: i.price }; }));
+    };
+    if (order.pay === 'mono') {
+      // онлайн-оплата: зберегти замовлення на сервері, отримати рахунок monobank і перейти на сторінку оплати
+      var btn = form.querySelector('.co__submit');
+      btn.disabled = true; btn.textContent = 'Переходимо до оплати…';
+      BE.createOrder(order).then(function () { return BE.monoInvoice(order.id); }).then(function (r) {
+        finish();
+        location.href = r.pageUrl;
+      }).catch(function (err) {
+        btn.disabled = false; btn.textContent = 'Підтвердити замовлення';
+        alert('Не вдалося перейти до оплати: ' + err.message + '\nОберіть інший спосіб оплати або спробуйте ще раз.');
+      });
+      return;
+    }
+    // якщо підключено сервер замовлень — надсилаємо замовлення туди (його побачать менеджер і бухгалтер)
+    if (BE && BE.enabled) BE.createOrder(order).catch(function () {});
+    finish();
     showDone(order);
   });
+
+  // Повернення зі сторінки оплати monobank: ?paid=<номер замовлення>
+  function showPaid(id) {
+    $('coGrid').hidden = true;
+    document.querySelector('.co__title').textContent = 'Оплата замовлення';
+    $('done').hidden = false;
+    var tries = 0;
+    var render = function (state) {
+      var msg = state === 'success'
+        ? '<div class="done__ok">✓</div><h2>Оплату отримано!</h2><p>Замовлення <b>' + esc(id) + '</b> оплачено. Менеджер зателефонує для підтвердження доставки.</p>'
+        : state === 'wait'
+          ? '<h2>Перевіряємо оплату…</h2><p>Зачекайте кілька секунд, не закривайте сторінку.</p>'
+          : '<h2>Оплату не завершено</h2><p>Замовлення <b>' + esc(id) + '</b> збережено, але оплата не пройшла або ще обробляється банком. Менеджер зв\'яжеться з вами, щоб завершити замовлення.</p>';
+      $('done').innerHTML = msg + '<a class="btn" href="catalog.html">Повернутися до каталогу</a>';
+    };
+    render('wait');
+    (function poll() {
+      window.WABackend.monoStatus(id).then(function (r) {
+        if (r.paid) { render('success'); return; }
+        if (++tries < 10 && (!r.status || r.status === 'created' || r.status === 'processing')) setTimeout(poll, 3000);
+        else render('fail');
+      }).catch(function () { if (++tries < 10) setTimeout(poll, 3000); else render('fail'); });
+    })();
+  }
 
   function showDone(o) {
     var pay = o.pay === 'bank'
@@ -289,8 +334,10 @@
         '<tr><th>Сума</th><td><b>' + fmt(o.total, 'UAH', true) + '</b></td></tr>' +
         '<tr><th>Призначення</th><td>Оплата замовлення ' + esc(o.id) + '</td></tr></table>' +
         '<p class="note">Замовлення відправимо після надходження оплати.</p>'
-      : '<h3>Оплата PayPass</h3><p>Оплатіть замовлення безконтактно — карткою або смартфоном — під час отримання. Сума: <b>' +
-        fmt(o.total, 'UAH', true) + '</b>.</p>';
+      : o.carrier === 'Самовивіз'
+        ? '<h3>Оплата при отриманні</h3><p>Оплатіть замовлення готівкою або карткою під час отримання на складі. Сума: <b>' + fmt(o.total, 'UAH', true) + '</b>.</p>'
+        : '<h3>Накладений платіж</h3><p>Оплатіть замовлення при отриманні у відділенні ' + esc(o.carrier) + '. Сума товарів: <b>' +
+          fmt(o.total, 'UAH', true) + '</b>; перевізник додатково стягує комісію за переказ коштів за своїми тарифами.</p>';
     $('coGrid').hidden = true;
     document.querySelector('.co__title').textContent = 'Замовлення оформлено';
     $('done').hidden = false;
@@ -318,6 +365,9 @@
   });
 
   $('year').textContent = new Date().getFullYear();
+  var paidId = new URLSearchParams(location.search).get('paid');
+  if (window.WABackend && window.WABackend.monoEnabled) $('monoOpt').hidden = false;
+  if (paidId && window.WABackend && window.WABackend.enabled) { showPaid(paidId); return; }
   renderSummary();
   // оптовий клієнт: підтягнути актуальну знижку й перерахувати суму
   if (window.WAWholesale) window.WAWholesale.refresh().then(function () { if (lines().length) renderSummary(); }).catch(function () {});

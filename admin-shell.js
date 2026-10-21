@@ -10,31 +10,44 @@
   var BE = window.WABackend;
   var ROLES = { admin: 'Адміністратор', manager: 'Менеджер', accountant: 'Бухгалтер' };
   var STATUS = { 'new': 'Нове', confirmed: 'Підтверджене', shipped: 'Відправлене', done: 'Виконане', cancelled: 'Скасоване' };
-  var PAY = { bank: 'На рахунок', paypass: 'PayPass при отриманні' };
+  var PAY = { bank: 'На рахунок', cod: 'Накладений платіж', paypass: 'PayPass при отриманні', mono: 'Карткою онлайн (monobank)' };
 
   // Розділи панелі та ролі, яким вони доступні
   var SECTIONS = [
     { group: 'Замовлення', items: [{ id: 'orders', t: 'Усі замовлення', roles: ['admin', 'manager', 'accountant'] }] },
-    { group: 'Бухгалтерія', items: [{ id: 'accounting', t: 'Облік замовлень', roles: ['admin', 'accountant'] }] },
-    { group: 'Клієнти', items: [{ id: 'wholesale', t: 'Оптові клієнти', roles: ['admin'] }] },
+    { group: 'Бухгалтерія', items: [{ id: 'accounting', t: 'Облік замовлень', roles: ['admin', 'accountant'], perm: ['accounting'] }] },
+    { group: 'Клієнти', items: [{ id: 'wholesale', t: 'Оптові клієнти', roles: ['admin'], perm: ['wholesale'] }] },
     { group: 'Каталог', items: [
-      { id: 'products', t: 'Товари', roles: ['admin'] },
-      { id: 'prices', t: 'Ціни та прайс-листи', roles: ['admin'] }] },
+      { id: 'products', t: 'Товари', roles: ['admin'], perm: ['catalog'] },
+      { id: 'prices', t: 'Ціни та прайс-листи', roles: ['admin'], perm: ['catalog'] }] },
     { group: 'Сайт', items: [
-      { id: 'contacts', t: 'Контакти', roles: ['admin'] },
-      { id: 'texts', t: 'Головна сторінка', roles: ['admin'] },
-      { id: 'bank', t: 'Реквізити оплати', roles: ['admin'] },
-      { id: 'tracking', t: 'Аналітика та пікселі', roles: ['admin'] }] },
+      { id: 'contacts', t: 'Контакти', roles: ['admin'], perm: ['site'] },
+      { id: 'texts', t: 'Головна сторінка', roles: ['admin'], perm: ['site'] },
+      { id: 'bank', t: 'Реквізити оплати', roles: ['admin'], perm: ['site'] },
+      { id: 'tracking', t: 'Аналітика та пікселі', roles: ['admin'], perm: ['site'] }] },
     { group: 'Доступ', items: [
-      { id: 'users', t: 'Користувачі та ролі', roles: ['admin'] },
-      { id: 'github', t: 'Підключення до GitHub', roles: ['admin'] }] }
+      { id: 'users', t: 'Працівники та доступи', roles: ['admin'] },
+      { id: 'github', t: 'Підключення до GitHub', roles: ['admin'], perm: ['catalog', 'site'] }] }
   ];
   var CATALOG_PANES = ['products', 'prices', 'contacts', 'texts', 'bank', 'tracking'];
 
   var user = null, orders = [], pane = '';
+  // Додаткові права, які адміністратор може дати понад роль (ті самі назви перевіряє сервер)
+  var PERMS = [
+    ['orders_manage', 'Обробка замовлень (статуси, ТТН, нотатки)'],
+    ['accounting', 'Облік і оплати'],
+    ['wholesale', 'Оптові клієнти та знижки'],
+    ['catalog', 'Товари й ціни'],
+    ['site', 'Контакти, тексти, реквізити, аналітика']
+  ];
+  var ROLE_PERMS = { admin: PERMS.map(function (p) { return p[0]; }), manager: ['orders_manage'], accountant: ['accounting'] };
+  function has(p, u) {
+    u = u || user;
+    return (ROLE_PERMS[u.role] || []).indexOf(p) !== -1 || (u.perms || []).indexOf(p) !== -1;
+  }
   var can = {
-    manage: function () { return user.role === 'admin' || user.role === 'manager'; },      // статус, ТТН, нотатки
-    account: function () { return user.role === 'admin' || user.role === 'accountant'; }   // оплата, документи
+    manage: function () { return has('orders_manage'); },   // статус, ТТН, нотатки
+    account: function () { return has('accounting'); }      // оплата, документи
   };
   var money = function (n) { return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' '); };
   var day = function (iso) { return iso ? new Date(iso).toLocaleDateString('uk-UA') : ''; };
@@ -60,10 +73,10 @@
     var it = function (name, qty, price, oe) { return { name: name, qty: qty, price: price, oe: oe }; };
     return [
       { id: 'WA-ПРИКЛАД-6', created_at: d(0.1), name: 'Олена Коваль', phone: '+380501112233', carrier: 'Нова Пошта', city: 'м. Київ, Київська обл.', warehouse: 'Відділення №12', pay: 'bank', note: 'Передзвоніть після 14:00', items: [it('Бампер передній - Tesla Model 3', 1, 3212, '1084168-S0-E')], total: 3212, status: 'new', paid: false },
-      { id: 'WA-ПРИКЛАД-5', created_at: d(1), name: 'Андрій Мельник', phone: '+380671234567', carrier: 'Делівері', city: 'Львів, Львівська область', warehouse: 'ЛЬВІВ-1 — вул. Городоцька, 357', pay: 'paypass', note: '', items: [it('Капот - BMW 3 (F30)', 1, 9800, '41007290947'), it('Петля капота ліва', 2, 650, '41617434311')], total: 11100, status: 'confirmed', paid: false },
+      { id: 'WA-ПРИКЛАД-5', created_at: d(1), name: 'Андрій Мельник', phone: '+380671234567', carrier: 'Делівері', city: 'Львів, Львівська область', warehouse: 'ЛЬВІВ-1 — вул. Городоцька, 357', pay: 'cod', note: '', items: [it('Капот - BMW 3 (F30)', 1, 9800, '41007290947'), it('Петля капота ліва', 2, 650, '41617434311')], total: 11100, status: 'confirmed', paid: false },
       { id: 'WA-ПРИКЛАД-4', created_at: d(3), name: 'Ірина Шевчук', phone: '+380931234567', carrier: 'Нова Пошта', city: 'м. Луцьк, Волинська обл.', warehouse: 'Відділення №5', pay: 'bank', note: '', items: [it('Решітка радіатора - Audi A6 (C7)', 1, 4350, '4G0853651')], total: 4350, status: 'shipped', ttn: '20450000000001', paid: true, paid_at: d(2.5), invoice: 'РН-0004' },
       { id: 'WA-ПРИКЛАД-3', created_at: d(6), name: 'Тарас Бондар', phone: '+380661234567', carrier: 'Нова Пошта', city: 'м. Одеса, Одеська обл.', warehouse: 'Поштомат №3301', pay: 'bank', note: 'VIN: WBA8E9G50GNT00000', items: [it('Підкрилок передній правий - BMW 3 (F30)', 1, 1180, '51717260726')], total: 1180, status: 'done', ttn: '20450000000002', paid: true, paid_at: d(5), invoice: 'РН-0003' },
-      { id: 'WA-ПРИКЛАД-2', created_at: d(9), name: 'Марія Ткаченко', phone: '+380731234567', carrier: 'Делівері', city: 'Харків, Харківська область', warehouse: 'ХАРКІВ-2', pay: 'paypass', note: '', items: [it('Крило переднє ліве - Volvo XC60', 1, 5600, '31385349')], total: 5600, status: 'done', ttn: '5900000001', paid: true, paid_at: d(7), invoice: 'РН-0002' },
+      { id: 'WA-ПРИКЛАД-2', created_at: d(9), name: 'Марія Ткаченко', phone: '+380731234567', carrier: 'Делівері', city: 'Харків, Харківська область', warehouse: 'ХАРКІВ-2', pay: 'cod', note: '', items: [it('Крило переднє ліве - Volvo XC60', 1, 5600, '31385349')], total: 5600, status: 'done', ttn: '5900000001', paid: true, paid_at: d(7), invoice: 'РН-0002' },
       { id: 'WA-ПРИКЛАД-1', created_at: d(12), name: 'Сергій Литвин', phone: '+380991234567', carrier: 'Нова Пошта', city: 'м. Дніпро, Дніпропетровська обл.', warehouse: 'Відділення №40', pay: 'bank', note: '', items: [it('Фара протитуманна - Mazda CX-5', 2, 1450, 'KD5351680')], total: 2900, status: 'cancelled', paid: false, manager_note: 'Клієнт відмовився' }
     ];
   }
@@ -89,7 +102,7 @@
     $('userName').textContent = u.name;
     $('userRole').textContent = ROLES[u.role] + (BE.enabled ? '' : ' · демо');
     $('usersHelp').innerHTML = BE.enabled
-      ? 'Користувачів додають у Supabase: розділ Authentication → Users → Add user (e-mail і пароль), потім у таблиці <code>profiles</code> — рядок з id цього користувача, іменем і роллю: <code>admin</code>, <code>manager</code> або <code>accountant</code>.'
+      ? 'Працівник входить на цій сторінці з e-mail і паролем, які ви йому задали. Пароль передайте особисто; змінити його можна кнопкою «Змінити пароль».'
       : '<b>Зараз демо-режим.</b> Справжніх облікових записів і паролів ще немає: ролі перемикаються на екрані входу, а замовлення — це приклади. Щоб працювали вхід за паролем і реальні замовлення із сайту, потрібно підключити сервер (файли <code>backend.js</code> і <code>supabase-setup.sql</code>).';
     renderNav();
     Promise.all([loadOrders(), loadWholesale()]).then(function () {
@@ -111,12 +124,14 @@
   });
   $('demoLogin').addEventListener('click', function (e) {
     var b = e.target.closest('[data-role]');
-    if (b) enter({ name: ROLES[b.dataset.role], role: b.dataset.role });
+    if (b) enter({ id: 'demo-' + b.dataset.role, name: ROLES[b.dataset.role], role: b.dataset.role, perms: [] });
   });
   $('logout').addEventListener('click', function () { BE.logout(); location.reload(); });
 
   /* ---------- Бічне меню ---------- */
-  function allowed(item) { return item.roles.indexOf(user.role) !== -1; }
+  function allowed(item) {
+    return item.roles.indexOf(user.role) !== -1 || (item.perm || []).some(function (p) { return (user.perms || []).indexOf(p) !== -1; });
+  }
   function firstPane() {
     var first = '';
     SECTIONS.forEach(function (s) { s.items.forEach(function (i) { if (!first && allowed(i)) first = i.id; }); });
@@ -146,6 +161,7 @@
     if (id === 'orders') renderOrders();
     if (id === 'accounting') renderAccounting();
     if (id === 'wholesale') renderWholesale();
+    if (id === 'users') loadStaff();
     if (id === 'prices') window.AdminCatalog.ensure().then(function () { window.AdminCatalog.prices(); });
     window.scrollTo(0, 0);
   }
@@ -204,7 +220,7 @@
       '<label class="fld">Статус<select id="fStatus"' + dis(m) + '>' + Object.keys(STATUS).map(function (k) { return '<option value="' + k + '"' + ((o.status || 'new') === k ? ' selected' : '') + '>' + STATUS[k] + '</option>'; }).join('') + '</select></label>' +
       '<label class="fld">Номер накладної (ТТН)<input id="fTtn" value="' + esc(o.ttn || '') + '"' + dis(m) + '></label>' +
       '<label class="fld wide">Нотатка менеджера<input id="fMnote" value="' + esc(o.manager_note || '') + '"' + dis(m) + '></label>' +
-      '<h5 class="wide">Оплата' + (a ? '' : ' (лише перегляд)') + ' · ' + esc(PAY[o.pay] || o.pay || '') + '</h5>' +
+      '<h5 class="wide">Оплата' + (a ? '' : ' (лише перегляд)') + ' · ' + esc(PAY[o.pay] || o.pay || '') + (o.pay === 'mono' ? ' · статус банку: ' + esc({ created: 'рахунок створено', processing: 'обробляється', hold: 'заблоковано', success: 'успішно', failure: 'помилка', reversed: 'повернуто', expired: 'прострочено' }[o.pay_status] || o.pay_status || 'немає') : '') + '</h5>' +
       '<label class="fld">Статус оплати<select id="fPaid"' + dis(a) + '><option value="0"' + (o.paid ? '' : ' selected') + '>Не оплачено</option><option value="1"' + (o.paid ? ' selected' : '') + '>Оплачено</option></select></label>' +
       '<label class="fld">Дата оплати<input id="fPaidAt" type="date" value="' + (o.paid_at ? o.paid_at.slice(0, 10) : '') + '"' + dis(a) + '></label>' +
       '<label class="fld wide">Номер документа (рахунок / накладна)<input id="fInvoice" value="' + esc(o.invoice || '') + '"' + dis(a) + '></label>' +
@@ -341,5 +357,131 @@
       renderWholesale(); renderNav();
       status('wsStatus', b.dataset.act === 'approve' ? 'Клієнта схвалено зі знижкою ' + disc + '%. Він у вкладці «Оптові клієнти».' : b.dataset.act === 'save' ? 'Знижку змінено на ' + disc + '%.' : 'Клієнта відхилено.', 'ok');
     }).catch(function (err) { status('wsStatus', err.message, 'bad'); });
+  });
+
+  /* ---------- Працівники та доступи ---------- */
+  var staff = [], editingStaff = null;
+  // демо: список працівників живе лише в цьому браузері
+  function demoStaff() {
+    try { var v = JSON.parse(localStorage.getItem('winauto-admin-staff')); if (v) return v; } catch (e) {}
+    return [
+      { id: 'demo-admin', name: 'Адміністратор', email: 'admin@win-auto.com.ua', role: 'admin', perms: [], active: true },
+      { id: 'demo-manager', name: 'Менеджер', email: 'manager@win-auto.com.ua', role: 'manager', perms: [], active: true },
+      { id: 'demo-accountant', name: 'Бухгалтер', email: 'buh@win-auto.com.ua', role: 'accountant', perms: [], active: true }
+    ];
+  }
+  function staffCall(action, data) {
+    if (BE.enabled) return BE.staff(action, data);
+    // демо-імітація серверної функції
+    var list = demoStaff(), i = list.map(function (x) { return x.id; }).indexOf(data && data.id);
+    if (action === 'list') return Promise.resolve(list);
+    if (action === 'create') {
+      if (list.some(function (x) { return x.email === data.email; })) return Promise.reject(new Error('Користувач із таким e-mail уже існує.'));
+      list.push({ id: 'demo-' + Date.now(), name: data.name, email: data.email, role: data.role, perms: data.perms, active: true });
+    } else if (action === 'update') {
+      if (data.id === user.id && ((data.role && data.role !== 'admin') || data.active === false)) return Promise.reject(new Error('Не можна зняти права адміністратора із самого себе.'));
+      ['name', 'role', 'perms', 'active'].forEach(function (k) { if (data[k] !== undefined) list[i][k] = data[k]; });
+    } else if (action === 'delete') {
+      if (data.id === user.id) return Promise.reject(new Error('Не можна видалити самого себе.'));
+      list.splice(i, 1);
+    }
+    try { localStorage.setItem('winauto-admin-staff', JSON.stringify(list)); } catch (e) {}
+    return Promise.resolve({ ok: true });
+  }
+  function loadStaff() {
+    status('staffStatus', 'Завантаження…');
+    staffCall('list').then(function (list) {
+      staff = list.sort(function (a, b) { return ['admin', 'manager', 'accountant'].indexOf(a.role) - ['admin', 'manager', 'accountant'].indexOf(b.role); });
+      status('staffStatus', BE.enabled ? '' : 'Демо-режим: працівники зберігаються лише в цьому браузері й увійти не можуть.');
+      renderStaff();
+    }).catch(function (err) {
+      status('staffStatus', /Failed to fetch|404|not found/i.test(err.message)
+        ? 'Не вдалося звернутися до серверної функції staff-admin. Перевірте, що її встановлено в Supabase (Edge Functions) і вимкнено Verify JWT.'
+        : err.message, 'bad');
+    });
+  }
+  var permLabel = function (p) { return (PERMS.filter(function (x) { return x[0] === p; })[0] || [p, p])[1]; };
+  function renderStaff() {
+    $('staffRows').innerHTML = staff.map(function (m) {
+      var extra = (m.perms || []).filter(function (p) { return (ROLE_PERMS[m.role] || []).indexOf(p) === -1; });
+      return '<tr data-staff="' + esc(m.id) + '"><td><b>' + esc(m.name || '') + '</b>' + (m.id === user.id ? ' <small>(ви)</small>' : '') + '<br><small>' + esc(m.email || '') + '</small></td>' +
+        '<td>' + ROLES[m.role] + '</td>' +
+        '<td>' + (m.role === 'admin' ? '<small>усі</small>' : extra.length ? extra.map(function (p) { return '<span class="tag">' + esc(permLabel(p)) + '</span>'; }).join(' ') : '<small>—</small>') + '</td>' +
+        '<td>' + (m.active === false ? '<span class="tag tag--cancelled">вимкнено</span>' : '<span class="tag tag--done">активний</span>') + '</td>' +
+        '<td class="acts"><button type="button" class="btn btn--sm btn--ghost">Редагувати</button></td></tr>';
+    }).join('') || '<tr><td colspan="5" class="empty">Працівників ще немає.</td></tr>';
+  }
+  function fillPerms(role, perms) {
+    var base = ROLE_PERMS[role] || [];
+    $('stPerms').innerHTML = PERMS.map(function (p) {
+      var inRole = base.indexOf(p[0]) !== -1;
+      return '<label><input type="checkbox" value="' + p[0] + '"' + (inRole || (perms || []).indexOf(p[0]) !== -1 ? ' checked' : '') + (inRole ? ' disabled' : '') + '><span>' +
+        esc(p[1]) + (inRole ? ' — входить у роль' : '') + '</span></label>';
+    }).join('');
+  }
+  function openStaff(m) {
+    editingStaff = m || null;
+    $('staffTitle').textContent = m ? 'Працівник: ' + (m.name || m.email) : 'Новий працівник';
+    $('stName').value = m ? m.name || '' : '';
+    $('stEmail').value = m ? m.email || '' : '';
+    $('stEmail').disabled = !!m;
+    $('stRole').value = m ? m.role : 'manager';
+    $('stPass').value = '';
+    $('stPassBox').hidden = !!m;
+    $('stPassBtn').hidden = !m; $('stDelete').hidden = !m || m.id === user.id;
+    $('stActiveBox').hidden = !m || m.id === user.id;
+    $('stActive').checked = !m || m.active !== false;
+    fillPerms($('stRole').value, m ? m.perms : []);
+    status('stStatus', '');
+    $('staffModal').hidden = false;
+  }
+  $('staffAdd').addEventListener('click', function () { openStaff(null); });
+  $('staffRows').addEventListener('click', function (e) {
+    var tr = e.target.closest('[data-staff]');
+    if (tr) openStaff(staff.filter(function (m) { return m.id === tr.dataset.staff; })[0]);
+  });
+  $('stRole').addEventListener('change', function () {
+    var cur = [].map.call($('stPerms').querySelectorAll('input:checked:not(:disabled)'), function (i) { return i.value; });
+    fillPerms($('stRole').value, cur);
+  });
+  $('staffModal').addEventListener('click', function (e) {
+    if (e.target === $('staffModal') || e.target.closest('[data-close]')) $('staffModal').hidden = true;
+  });
+  function staffDone(msg) {
+    $('staffModal').hidden = true;
+    loadStaff();
+    setTimeout(function () { status('staffStatus', msg, 'ok'); }, 400);
+  }
+  $('staffForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var role = $('stRole').value;
+    var perms = [].map.call($('stPerms').querySelectorAll('input:checked:not(:disabled)'), function (i) { return i.value; });
+    var data = { name: $('stName').value.trim(), role: role, perms: perms };
+    if (!data.name) { status('stStatus', 'Вкажіть ім\'я.', 'bad'); return; }
+    if (!editingStaff) {
+      data.email = $('stEmail').value.trim().toLowerCase();
+      data.password = $('stPass').value;
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(data.email)) { status('stStatus', 'Вкажіть правильний e-mail.', 'bad'); return; }
+      if (data.password.length < 8) { status('stStatus', 'Пароль має містити щонайменше 8 символів.', 'bad'); return; }
+    } else {
+      data.id = editingStaff.id;
+      if (editingStaff.id !== user.id) data.active = $('stActive').checked;
+    }
+    status('stStatus', 'Збереження…');
+    staffCall(editingStaff ? 'update' : 'create', data).then(function () {
+      staffDone(editingStaff ? 'Зміни збережено.' : 'Працівника додано. Передайте йому e-mail і пароль для входу.');
+    }).catch(function (err) { status('stStatus', err.message, 'bad'); });
+  });
+  $('stPassBtn').addEventListener('click', function () {
+    var p = prompt('Новий пароль для ' + (editingStaff.name || editingStaff.email) + ' (щонайменше 8 символів):');
+    if (p == null) return;
+    if (p.length < 8) { status('stStatus', 'Пароль має містити щонайменше 8 символів.', 'bad'); return; }
+    staffCall('password', { id: editingStaff.id, password: p }).then(function () { status('stStatus', 'Пароль змінено.', 'ok'); })
+      .catch(function (err) { status('stStatus', err.message, 'bad'); });
+  });
+  $('stDelete').addEventListener('click', function () {
+    if (!confirm('Видалити працівника ' + (editingStaff.name || editingStaff.email) + '? Він більше не зможе увійти.')) return;
+    staffCall('delete', { id: editingStaff.id }).then(function () { staffDone('Працівника видалено.'); })
+      .catch(function (err) { status('stStatus', err.message, 'bad'); });
   });
 })();

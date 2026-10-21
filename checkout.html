@@ -7,7 +7,7 @@
 <script>
   try { document.documentElement.dataset.theme = localStorage.getItem('winauto-theme') || 'dark'; } catch (e) {}
 </script>
-<link rel="stylesheet" href="styles.css?v=30">
+<link rel="stylesheet" href="styles.css?v=34">
 </head>
 <body>
 
@@ -96,8 +96,10 @@
         <div class="opts">
           <label class="opt"><input type="radio" name="pay" value="bank" checked>
             <span><b>Оплата на рахунок</b><small>Переказ за реквізитами (IBAN). Реквізити покажемо після оформлення замовлення.</small></span></label>
-          <label class="opt"><input type="radio" name="pay" value="paypass">
-            <span><b>PayPass</b><small>Безконтактна оплата карткою або смартфоном під час отримання.</small></span></label>
+          <label class="opt" id="monoOpt" hidden><input type="radio" name="pay" value="mono">
+            <span><b>Карткою онлайн</b><small>Visa, Mastercard, Apple Pay, Google Pay — через monobank. Оплата одразу після оформлення.</small></span></label>
+          <label class="opt"><input type="radio" name="pay" value="cod">
+            <span><b>Накладений платіж</b><small id="codNote">Оплата при отриманні у відділенні перевізника. Перевізник стягує комісію за переказ коштів.</small></span></label>
         </div>
         <label class="fld">Коментар до замовлення <i>(необов'язково)</i>
           <textarea name="note" id="note" rows="2" placeholder="VIN-код авто, побажання щодо доставки тощо"></textarea>
@@ -140,11 +142,11 @@
   <div class="wrap footer__copy">© <span id="year"></span> Win Auto. Усі права захищені.</div>
 </footer>
 
-<script src="site.js?v=30"></script>
-<script src="products.js?v=30"></script>
-<script src="menu.js?v=30"></script>
-<script src="backend.js?v=30"></script>
-<script src="wholesale.js?v=30"></script>
-<script src="checkout.js?v=30"></script>
+<script src="site.js?v=34"></script>
+<script src="products.js?v=34"></script>
+<script src="menu.js?v=34"></script>
+<script src="backend.js?v=34"></script>
+<script src="wholesale.js?v=34"></script>
+<script src="checkout.js?v=34"></script>
 </body>
 </html>

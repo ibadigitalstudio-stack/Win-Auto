@@ -94,3 +94,8 @@ body.admin { padding-bottom: 70px; }
 .adm__tabs button { background: none; border: 0; border-bottom: 3px solid transparent; padding: 10px 14px; font-weight: 800; color: var(--muted); }
 .adm__tabs button.on { color: var(--text); border-bottom-color: var(--red); }
 .adm .kpis .box h2 { margin-bottom: 8px; }
+
+.perms { display: grid; gap: 8px; margin-top: 6px; text-transform: none; letter-spacing: 0; font-weight: 500; font-size: 14px; color: var(--text); }
+.perms label { display: flex; gap: 8px; align-items: center; cursor: pointer; }
+.perms input { accent-color: var(--red); width: 17px; height: 17px; }
+.perms input:disabled + span { color: var(--muted); }
