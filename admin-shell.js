@@ -98,7 +98,7 @@
     user = u;
     $('login').hidden = true;
     $('app').hidden = false;
-    $('userBox').hidden = false; $('logout').hidden = false;
+    $('userBox').hidden = false; $('logout').hidden = false; $('myPass').hidden = !BE.enabled; $('sidePass').hidden = !BE.enabled;
     $('userName').textContent = u.name;
     $('sideName').textContent = u.name;
     $('admBurger').hidden = false;
@@ -113,14 +113,26 @@
       open(firstPane());
     }).catch(function (err) { open(firstPane()); status('ordersStatus', err.message, 'bad'); });
   }
-  if (BE.enabled) $('loginForm').hidden = false; else $('demoLogin').hidden = false;
+  if (BE.enabled) {
+    // збережений вхід («Не виходити на цьому пристрої»)
+    status('loginStatus', 'Перевірка входу…');
+    $('loginForm').hidden = false;
+    BE.restoreStaff().then(function (u) {
+      status('loginStatus', '');
+      if (u && ROLES[u.role]) enter(u);
+    });
+  } else $('demoLogin').hidden = false;
 
   $('loginForm').addEventListener('submit', function (e) {
     e.preventDefault();
     status('loginStatus', 'Вхід…');
-    BE.login($('lEmail').value.trim(), $('lPass').value).then(function (u) {
+    var email = $('lEmail').value.trim(), pass = $('lPass').value;
+    BE.login(email, pass, $('lRemember').checked).then(function (u) {
       if (!ROLES[u.role]) throw new Error('Невідома роль користувача: ' + u.role);
-      $('lPass').value = '';
+      // підказка браузеру (Chrome, Edge) зберегти логін і пароль; Safari та інші пропонують це самі
+      if (window.PasswordCredential && navigator.credentials) {
+        try { navigator.credentials.store(new window.PasswordCredential({ id: email, password: pass, name: u.name })).catch(function () {}); } catch (err) {}
+      }
       status('loginStatus', '');
       enter(u);
     }).catch(function (err) { status('loginStatus', err.message === 'Invalid login credentials' ? 'Невірний e-mail або пароль.' : err.message, 'bad'); });
@@ -130,6 +142,19 @@
     if (b) enter({ id: 'demo-' + b.dataset.role, name: ROLES[b.dataset.role], role: b.dataset.role, perms: [] });
   });
   $('logout').addEventListener('click', function () { BE.logout(); location.reload(); });
+  // зміна власного пароля працівника
+  function changeMyPassword() {
+    var cur = prompt('Чинний пароль:');
+    if (!cur) return;
+    var next = prompt('Новий пароль (щонайменше 8 символів):');
+    if (next == null) return;
+    if (next.length < 8) { alert('Пароль має містити щонайменше 8 символів.'); return; }
+    if (prompt('Повторіть новий пароль:') !== next) { alert('Паролі не збігаються.'); return; }
+    BE.changePassword(cur, next).then(function () { alert('Пароль змінено. Якщо браузер запропонує оновити збережений пароль — погодьтеся.'); })
+      .catch(function (err) { alert(err.message); });
+  }
+  $('myPass').addEventListener('click', changeMyPassword);
+  $('sidePass').addEventListener('click', changeMyPassword);
 
   /* ---------- Бічне меню ---------- */
   function allowed(item) {
@@ -363,6 +388,54 @@
         '<td class="acts">' + acts + '</td></tr>';
     }).join('');
   }
+  // Ручне додавання оптового клієнта (одразу схвалений, зі знижкою)
+  $('wsAdd').addEventListener('click', function () {
+    ['wcLast', 'wcFirst', 'wcCompany', 'wcAddress', 'wcPhone', 'wcEmail', 'wcPass'].forEach(function (id) { $(id).value = ''; });
+    $('wcType').value = ''; $('wcDisc').value = 5;
+    status('wcStatus', '');
+    $('wsModal').hidden = false;
+  });
+  $('wcGen').addEventListener('click', function () {
+    var abc = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789', p = '', a = new Uint32Array(10);
+    crypto.getRandomValues(a);
+    for (var i = 0; i < a.length; i++) p += abc[a[i] % abc.length];
+    $('wcPass').value = p;
+  });
+  $('wsModal').addEventListener('click', function (e) {
+    if (e.target === $('wsModal') || e.target.closest('[data-close]')) $('wsModal').hidden = true;
+  });
+  $('wsForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var d = $('wcPhone').value.replace(/\D/g, ''); if (d.length === 10 && d[0] === '0') d = '38' + d;
+    var f = {
+      last_name: $('wcLast').value.trim(), first_name: $('wcFirst').value.trim(), business_type: $('wcType').value,
+      company: $('wcCompany').value.trim(), address: $('wcAddress').value.trim(), phone: '+' + d,
+      email: $('wcEmail').value.trim().toLowerCase(), password: $('wcPass').value, discount: parseFloat($('wcDisc').value)
+    };
+    if (!f.last_name || !f.first_name || !f.address) { status('wcStatus', 'Заповніть прізвище, ім\'я та адресу.', 'bad'); return; }
+    if (!/^380\d{9}$/.test(d)) { status('wcStatus', 'Телефон у форматі +380XXXXXXXXX.', 'bad'); return; }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email)) { status('wcStatus', 'Вкажіть правильний e-mail.', 'bad'); return; }
+    if (f.password.length < 8) { status('wcStatus', 'Пароль має містити щонайменше 8 символів.', 'bad'); return; }
+    if (!(f.discount >= 0 && f.discount <= 90)) { status('wcStatus', 'Знижка має бути від 0 до 90%.', 'bad'); return; }
+    status('wcStatus', 'Збереження…');
+    var save = BE.enabled ? BE.staff('client_create', f) : (function () {
+      var list = WSX.demoList();
+      if (list.some(function (c) { return c.email === f.email; })) return Promise.reject(new Error('Клієнт із таким e-mail уже є.'));
+      list.unshift({ id: 'w' + Date.now(), created_at: new Date().toISOString(), status: 'approved', discount: f.discount, approved_at: new Date().toISOString(),
+        last_name: f.last_name, first_name: f.first_name, business_type: f.business_type, company: f.company, address: f.address, phone: f.phone, email: f.email });
+      WSX.demoSave(list);
+      return Promise.resolve();
+    })();
+    save.then(loadWholesale).then(function () {
+      $('wsModal').hidden = true;
+      wsTab = 'approved';
+      renderWholesale(); renderNav();
+      status('wsStatus', 'Клієнта ' + f.last_name + ' ' + f.first_name + ' додано зі знижкою ' + f.discount + '%. Дані для входу: ' + f.email + ' / ' + f.password + ' — передайте їх клієнту.', 'ok');
+    }).catch(function (err) {
+      status('wcStatus', /Failed to fetch|not found/i.test(err.message) ? 'Оновіть функцію staff-admin у Supabase (Edge Functions), щоб додавати клієнтів.' : err.message, 'bad');
+    });
+  });
+
   $('wsTabs').addEventListener('click', function (e) {
     var b = e.target.closest('[data-ws]');
     if (b) { wsTab = b.dataset.ws; renderWholesale(); }

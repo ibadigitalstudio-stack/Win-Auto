@@ -8,8 +8,8 @@
 <script>
   try { document.documentElement.dataset.theme = localStorage.getItem('winauto-theme') || 'dark'; } catch (e) {}
 </script>
-<link rel="stylesheet" href="styles.css?v=38">
-<link rel="stylesheet" href="admin.css?v=38">
+<link rel="stylesheet" href="styles.css?v=41">
+<link rel="stylesheet" href="admin.css?v=41">
 </head>
 <body class="admin">
 
@@ -23,6 +23,7 @@
     <span class="adm__badge">Адмін-панель</span>
     <span class="grow"></span>
     <span class="adm__user" id="userBox" hidden><b id="userName"></b><small id="userRole"></small></span>
+    <button class="btn btn--ghost btn--sm" type="button" id="myPass" hidden>Пароль</button>
     <button class="btn btn--ghost btn--sm" type="button" id="logout" hidden>Вийти</button>
   </div>
 </header>
@@ -32,10 +33,12 @@
   <section class="box">
     <h1>Вхід до адмін-панелі</h1>
 
-    <form id="loginForm" hidden>
-      <label class="fld">E-mail<input id="lEmail" type="email" autocomplete="username" required></label>
-      <label class="fld">Пароль<input id="lPass" type="password" autocomplete="current-password" required></label>
+    <form id="loginForm" method="post" action="#" hidden>
+      <label class="fld">E-mail<input id="lEmail" name="email" type="email" autocomplete="username" required></label>
+      <label class="fld">Пароль<input id="lPass" name="password" type="password" autocomplete="current-password" required></label>
+      <label class="chk" style="margin:0 0 14px"><input type="checkbox" id="lRemember" checked> Не виходити на цьому пристрої</label>
       <button class="btn btn--wide" type="submit">Увійти</button>
+      <p class="help" style="margin:10px 0 0">Браузер запропонує зберегти e-mail і пароль — погоджуйтеся лише на своєму пристрої.</p>
       <p class="status" id="loginStatus"></p>
     </form>
 
@@ -59,7 +62,7 @@
       <button type="button" class="x" id="admClose" aria-label="Закрити">×</button>
     </div>
     <nav id="nav"></nav>
-    <div class="adm__sidefoot"><a href="index.html">← Відкрити сайт</a><button type="button" class="rm" id="sideLogout" style="display:inline">Вийти</button></div>
+    <div class="adm__sidefoot"><a href="index.html">← Відкрити сайт</a><span><button type="button" class="rm" id="sidePass" style="display:inline;margin-right:12px">Пароль</button><button type="button" class="rm" id="sideLogout" style="display:inline">Вийти</button></span></div>
   </aside>
 
   <main class="adm__main">
@@ -110,6 +113,12 @@
     <!-- Оптові клієнти -->
     <section data-pane="wholesale" hidden>
       <h1>Оптові клієнти</h1>
+      <div class="box">
+        <div class="adm__row" style="justify-content:space-between">
+          <p class="help" style="margin:0">Клієнти реєструються самі в кабінеті на сайті, або ви додаєте їх тут — одразу схваленими й зі знижкою.</p>
+          <button class="btn" type="button" id="wsAdd">+ Додати клієнта</button>
+        </div>
+      </div>
       <div class="adm__tabs" id="wsTabs">
         <button type="button" class="on" data-ws="pending">Заявки на модерації</button>
         <button type="button" data-ws="approved">Оптові клієнти</button>
@@ -305,6 +314,33 @@
   </div>
 </div>
 
+<!-- Новий оптовий клієнт -->
+<div class="overlay" id="wsModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" style="max-width:640px">
+    <button class="x" type="button" data-close aria-label="Закрити">×</button>
+    <form id="wsForm" class="frm" novalidate>
+      <h2 class="wide" style="margin:0 0 14px">Новий оптовий клієнт</h2>
+      <label class="fld">Прізвище<input id="wcLast" autocomplete="off"></label>
+      <label class="fld">Ім'я<input id="wcFirst" autocomplete="off"></label>
+      <label class="fld">Тип діяльності<select id="wcType"><option value="">—</option><option>СТО</option><option>Розборка</option><option>Інтернет-магазин</option><option>Дилер</option><option>Автопарк</option></select></label>
+      <label class="fld">Назва фірми <i>(якщо є)</i><input id="wcCompany" autocomplete="off"></label>
+      <label class="fld wide">Адреса<input id="wcAddress" autocomplete="off"></label>
+      <label class="fld">Телефон<input id="wcPhone" type="tel" autocomplete="off" placeholder="+380…"></label>
+      <label class="fld">Знижка, %<input id="wcDisc" type="number" min="0" max="90" step="0.5" value="5"></label>
+      <label class="fld">E-mail для входу на сайт<input id="wcEmail" type="email" autocomplete="off"></label>
+      <label class="fld">Пароль для входу <i>(мін. 8 символів)</i>
+        <span class="adm__row" style="flex-wrap:nowrap;gap:6px"><input id="wcPass" type="text" autocomplete="new-password" style="flex:1"><button class="btn btn--sm btn--ghost" type="button" id="wcGen">Згенерувати</button></span>
+      </label>
+      <p class="help wide" style="margin:0">Клієнт входить у «Мій кабінет» на сайті з цим e-mail і паролем — і бачить ціни зі своєю знижкою. Передайте йому дані для входу особисто.</p>
+      <div class="wide cab__actions">
+        <button class="btn" type="submit">Додати клієнта</button>
+        <button class="btn btn--ghost" type="button" data-close>Скасувати</button>
+        <span class="status" id="wcStatus"></span>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Працівник -->
 <div class="overlay" id="staffModal" hidden>
   <div class="modal" role="dialog" aria-modal="true" style="max-width:620px">
@@ -368,9 +404,9 @@
   </div>
 </div>
 
-<script src="backend.js?v=38"></script>
-<script src="wholesale.js?v=38"></script>
-<script src="admin.js?v=38"></script>
-<script src="admin-shell.js?v=38"></script>
+<script src="backend.js?v=41"></script>
+<script src="wholesale.js?v=41"></script>
+<script src="admin.js?v=41"></script>
+<script src="admin-shell.js?v=41"></script>
 </body>
 </html>

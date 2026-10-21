@@ -24,10 +24,33 @@ Deno.serve(async (req) => {
     const token = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
     const { data: who } = await db.auth.getUser(token);
     if (!who?.user) return fail('Увійдіть знову.', 401);
-    const { data: me } = await db.from('profiles').select('role,active').eq('id', who.user.id).maybeSingle();
-    if (!me || me.role !== 'admin' || me.active === false) return fail('Лише адміністратор може керувати працівниками.', 403);
-
+    const { data: me } = await db.from('profiles').select('role,active,perms').eq('id', who.user.id).maybeSingle();
+    if (!me || me.active === false) return fail('Немає доступу.', 403);
     const b = await req.json();
+
+    // Оптовий клієнт, доданий вручну: адміністратор або працівник із правом «Оптові клієнти»
+    if (b.action === 'client_create') {
+      if (me.role !== 'admin' && !(me.perms || []).includes('wholesale')) return fail('Немає права додавати оптових клієнтів.', 403);
+      const email = String(b.email || '').trim().toLowerCase();
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return fail('Вкажіть правильний e-mail.');
+      if (String(b.password || '').length < 8) return fail('Пароль має містити щонайменше 8 символів.');
+      for (const k of ['last_name', 'first_name', 'address', 'phone']) if (!String(b[k] || '').trim()) return fail('Заповніть прізвище, ім\'я, адресу й телефон.');
+      const discount = Number(b.discount) || 0;
+      if (discount < 0 || discount > 90) return fail('Знижка має бути від 0 до 90%.');
+      const types = ['СТО', 'Розборка', 'Інтернет-магазин', 'Дилер', 'Автопарк'];
+      const { data: created, error } = await db.auth.admin.createUser({ email, password: b.password, email_confirm: true });
+      if (error || !created?.user) return fail(error?.message?.includes('already') ? 'Користувач із таким e-mail уже існує.' : (error?.message || 'Не вдалося створити обліковий запис.'));
+      const { error: e2 } = await db.from('wholesale_clients').insert({
+        id: created.user.id, email, status: 'approved', discount, approved_at: new Date().toISOString(),
+        last_name: String(b.last_name).trim(), first_name: String(b.first_name).trim(),
+        business_type: types.includes(b.business_type) ? b.business_type : null,
+        company: String(b.company || '').trim() || null, address: String(b.address).trim(), phone: String(b.phone).trim()
+      });
+      if (e2) { await db.auth.admin.deleteUser(created.user.id); return fail(e2.message); }
+      return json({ ok: true, id: created.user.id });
+    }
+
+    if (me.role !== 'admin') return fail('Лише адміністратор може керувати працівниками.', 403);
     const activeAdmins = async () => {
       const { count } = await db.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'admin').eq('active', true);
       return count || 0;

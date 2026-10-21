@@ -199,16 +199,40 @@
       : c.status === 'rejected'
         ? '<p style="margin:0 0 12px">Заявку <b>відхилено</b>. Якщо це помилка, зв\'яжіться з нами.</p>'
         : '<p style="margin:0 0 12px">Заявка <b>на модерації</b>. Після схвалення тут з\'явиться ваша знижка.</p>';
-    $('wsBody').innerHTML = st + info + '<button type="button" class="rm" style="display:inline" data-ws="out">' + (BE && BE.enabled ? 'Вийти' : 'Скасувати заявку на цьому пристрої') + '</button>';
+    $('wsBody').innerHTML = st + info +
+      (BE && BE.enabled ? '<button type="button" class="rm" style="display:inline;margin-right:16px" data-ws="pass">Змінити пароль</button>' : '') +
+      '<button type="button" class="rm" style="display:inline" data-ws="out">' + (BE && BE.enabled ? 'Вийти' : 'Скасувати заявку на цьому пристрої') + '</button>' +
+      '<div id="wsPassBox"></div>';
   }
   $('wsBox').addEventListener('click', function (e) {
     var b = e.target.closest('[data-ws]');
     if (!b) return;
     if (b.dataset.ws === 'out') { WS.signOut(); wsRender(); }
+    else if (b.dataset.ws === 'pass') {
+      // форма зміни пароля (поля з autocomplete, щоб браузер оновив збережений пароль)
+      $('wsPassBox').innerHTML = '<form id="wsPass" class="form" style="margin-top:14px" novalidate>' +
+        '<input type="email" autocomplete="username" value="' + esc((WS.current() || {}).email || '') + '" hidden>' +
+        '<input id="wpCur" type="password" placeholder="Чинний пароль" autocomplete="current-password">' +
+        '<input id="wpNew" type="password" placeholder="Новий пароль (мін. 8 символів)" autocomplete="new-password">' +
+        '<input id="wpNew2" type="password" placeholder="Повторіть новий пароль" autocomplete="new-password">' +
+        '<button class="btn btn--wide" type="submit">Зберегти новий пароль</button></form><p class="status" id="wsStatus"></p>';
+      $('wpCur').focus();
+    }
     else wsForm(b.dataset.ws);
   });
   $('wsBox').addEventListener('submit', function (e) {
     e.preventDefault();
+    if (e.target.id === 'wsPass') {
+      var cur = $('wpCur').value, next = $('wpNew').value;
+      if (!cur) { wsMsg('Введіть чинний пароль.', true); return; }
+      if (next.length < 8) { wsMsg('Новий пароль має містити щонайменше 8 символів.', true); return; }
+      if (next !== $('wpNew2').value) { wsMsg('Нові паролі не збігаються.', true); return; }
+      wsMsg('Збереження…');
+      BE.changePassword(cur, next).then(function () {
+        $('wsPassBox').innerHTML = '<p class="note" style="color:var(--ok);margin-top:12px">✓ Пароль змінено.</p>';
+      }).catch(function (err) { wsMsg(err.message, true); });
+      return;
+    }
     if (e.target.id === 'wsLogin') {
       wsMsg('Вхід…');
       WS.signIn($('wlEmail').value.trim(), $('wlPass').value).then(wsRender)

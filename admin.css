@@ -106,7 +106,7 @@ body.admin { padding-bottom: 70px; }
 @media (max-width: 900px) {
   body.admin { padding-bottom: 90px; }
   .adm__burger:not([hidden]) { display: grid; }
-  .adm__user, #logout { display: none !important; }
+  .adm__user, #logout, #myPass { display: none !important; }
   .adm { display: block; padding-top: 16px; }
   .adm__sidebtn { display: none !important; }
   .adm__side, .adm__side:not(.open) nav { display: flex; }
