@@ -7,11 +7,13 @@
     window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
     script('https://www.googletagmanager.com/gtm.js?id=' + T.gtm);
   }
-  if (/^G-[A-Z0-9]+$/i.test(T.ga4 || '')) {
+  // Google-тег: GA4 (G-…) та/або Google Ads (AW-…); подія purchase іде в усі підключені
+  var gIds = [T.ga4, T.gads].filter(function (id) { return /^(G|AW)-[A-Z0-9]+$/i.test(id || ''); });
+  if (gIds.length) {
     window.gtag = function () { window.dataLayer.push(arguments); };
     window.gtag('js', new Date());
-    window.gtag('config', T.ga4);
-    script('https://www.googletagmanager.com/gtag/js?id=' + T.ga4);
+    gIds.forEach(function (id) { window.gtag('config', id); });
+    script('https://www.googletagmanager.com/gtag/js?id=' + gIds[0]);
   }
   if (/^\d+$/.test(T.fbPixel || '')) {
     var f = window.fbq = function () { f.callMethod ? f.callMethod.apply(f, arguments) : f.queue.push(arguments); };

@@ -402,6 +402,7 @@
     tFb:  { key: 'fbPixel', re: /^\d{8,20}$/, msg: 'ID пікселя Facebook — це лише цифри (15–16 знаків).' },
     tGa:  { key: 'ga4', re: /^G-[A-Z0-9]{4,}$/i, msg: 'ID Google Analytics має вигляд G-XXXXXXXXXX.' },
     tGtm: { key: 'gtm', re: /^GTM-[A-Z0-9]{4,}$/i, msg: 'ID Google Tag Manager має вигляд GTM-XXXXXXX.' },
+    tAds: { key: 'gads', re: /^AW-\d{6,}$/i, msg: 'ID тегу Google Ads має вигляд AW-123456789.' },
     tGsc: { key: 'gsc', re: /^[A-Za-z0-9_-]{20,}$/, msg: 'Код Search Console — це значення content із метатега підтвердження.' }
   };
   var gscPublished = null;   // код Search Console, який уже вписано в index.html
@@ -425,7 +426,7 @@
       // можна вставити весь метатег Search Console — візьмемо з нього лише код
       if (id === 'tGsc') { var m = v.match(/content=["']([^"']+)["']/); if (m) v = m[1]; }
       if (v && !TRACK[id].re.test(v)) bad = bad || TRACK[id].msg;
-      tracking[TRACK[id].key] = v.toUpperCase().indexOf('G') === 0 && id !== 'tGsc' ? v.toUpperCase() : v;
+      tracking[TRACK[id].key] = id === 'tGsc' || id === 'tFb' ? v : v.toUpperCase();
     });
     if (bad) { status('setStatus', bad, 'bad'); return; }
     site.tracking = tracking;

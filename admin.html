@@ -8,8 +8,8 @@
 <script>
   try { document.documentElement.dataset.theme = localStorage.getItem('winauto-theme') || 'dark'; } catch (e) {}
 </script>
-<link rel="stylesheet" href="styles.css?v=45">
-<link rel="stylesheet" href="admin.css?v=45">
+<link rel="stylesheet" href="styles.css?v=46">
+<link rel="stylesheet" href="admin.css?v=46">
 </head>
 <body class="admin">
 
@@ -229,12 +229,14 @@
           <label class="fld">Facebook Pixel — ID пікселя<input id="tFb" inputmode="numeric" placeholder="123456789012345"></label>
           <label class="fld">Google Analytics 4 — ID потоку<input id="tGa" placeholder="G-XXXXXXXXXX"></label>
           <label class="fld">Google Tag Manager — ID контейнера<input id="tGtm" placeholder="GTM-XXXXXXX"></label>
+          <label class="fld">Google Ads — ID тегу конверсій<input id="tAds" placeholder="AW-123456789"></label>
           <label class="fld">Google Search Console — код підтвердження<input id="tGsc" placeholder="код або весь метатег"></label>
           <div class="wide help">
             <b>Де взяти:</b>
             <ul style="padding-left:20px;margin:6px 0">
               <li>Facebook Pixel: Events Manager → Джерела даних → ваш піксель → ID.</li>
               <li>Google Analytics: Адміністратор → Потоки даних → веб-потік → Ідентифікатор вимірювання.</li>
+              <li>Google Ads: Цілі → Конверсії → ваша дія «Покупка» → Налаштування тегу → «Встановити самостійно»: ID має вигляд AW-123456789. Окремий код події вставляти не потрібно — сайт сам надсилає подію purchase із сумою й номером замовлення.</li>
               <li>Tag Manager: ID контейнера вгорі сторінки (GTM-…). Якщо GA4 і піксель уже налаштовані всередині GTM, окремо їх тут не вказуйте, щоб події не дублювалися.</li>
               <li>Search Console: Додати ресурс → Префікс URL → спосіб «Тег HTML» → скопіюйте метатег сюди, опублікуйте, зачекайте кілька хвилин і натисніть «Підтвердити» в Search Console.</li>
             </ul>
@@ -404,9 +406,9 @@
   </div>
 </div>
 
-<script src="backend.js?v=45"></script>
-<script src="wholesale.js?v=45"></script>
-<script src="admin.js?v=45"></script>
-<script src="admin-shell.js?v=45"></script>
+<script src="backend.js?v=46"></script>
+<script src="wholesale.js?v=46"></script>
+<script src="admin.js?v=46"></script>
+<script src="admin-shell.js?v=46"></script>
 </body>
 </html>
