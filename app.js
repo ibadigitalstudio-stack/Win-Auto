@@ -316,6 +316,7 @@
   function openProduct(id) {
     var p = byId[id];
     if (!p) return;
+    if (window.WATrack) window.WATrack('view_item', sale(p.p), [{ item_id: p.id, item_name: p.n, price: sale(p.p), quantity: 1, item_category: CAT[p.g].t, item_brand: p.cars[0][0] }]);
     var rows = [['Категорія', CAT[p.g].t + (p.sg ? ' → ' + p.sg : '')], ['Тип', p.o ? 'Оригінал' : 'Аналог']].concat(p.a);
     var an = analogs(p);
     $('modalBody').innerHTML = '<div class="pv">' + pic(p, false) + '<div>' +

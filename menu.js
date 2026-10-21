@@ -21,14 +21,32 @@
     f('track', 'PageView');
   }
   // події магазину: надсилаються в усі підключені сервіси
-  window.WATrack = function (name, value, items) {
-    var ga = { add_to_cart: 'add_to_cart', purchase: 'purchase' }[name], fb = { add_to_cart: 'AddToCart', purchase: 'Purchase' }[name];
-    var params = { currency: 'UAH', value: Math.round(value * 100) / 100 };
-    if (window.fbq && fb) window.fbq('track', fb, params);
-    if (items) params.items = items;
+  //   view_item — перегляд товару, add_to_cart — у кошик, begin_checkout — початок оформлення,
+  //   purchase — оформлене замовлення, phone_click — натискання на номер телефону
+  var GA = { view_item: 'view_item', add_to_cart: 'add_to_cart', begin_checkout: 'begin_checkout', purchase: 'purchase', phone_click: 'phone_click' };
+  var FB = { view_item: 'ViewContent', add_to_cart: 'AddToCart', begin_checkout: 'InitiateCheckout', purchase: 'Purchase', phone_click: 'Contact' };
+  window.WATrack = function (name, value, items, orderId) {
+    var ga = GA[name], fb = FB[name];
+    var params = {};
+    if (value != null) { params.currency = 'UAH'; params.value = Math.round(value * 100) / 100; }
+    // номер замовлення: Google і Facebook не рахуватимуть ту саму покупку двічі
+    if (orderId) params.transaction_id = orderId;
+    if (window.fbq && fb) {
+      var fp = {};
+      Object.keys(params).forEach(function (k) { if (k !== 'transaction_id') fp[k] = params[k]; });
+      // id товарів збігаються з id у фіді — для динамічного ремаркетингу
+      if (items) { fp.content_ids = items.map(function (i) { return String(i.item_id); }); fp.content_type = 'product'; fp.num_items = items.length; }
+      window.fbq('track', fb, fp, orderId ? { eventID: orderId } : undefined);
+    }
+    if (items) params.items = items.map(function (i) { var x = {}; Object.keys(i).forEach(function (k) { x[k] = i[k]; }); x.google_business_vertical = 'retail'; return x; });
     if (window.gtag && ga) window.gtag('event', ga, params);
-    else if (T.gtm && ga) window.dataLayer.push({ event: ga, ecommerce: params });
+    else if (T.gtm && ga) window.dataLayer.push({ ecommerce: null }), window.dataLayer.push({ event: ga, ecommerce: params });
   };
+  // дзвінок: натискання на будь-який номер телефону на сайті
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('a[href^="tel:"]');
+    if (a) window.WATrack('phone_click', null, null);
+  });
 })();
 
 // Налаштування сайту (site.js, редагуються в адмін-панелі) підставляються в усі сторінки

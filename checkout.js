@@ -279,7 +279,7 @@
     var finish = function () {
       store.set('cart', {});
       cart = {};
-      if (window.WATrack) window.WATrack('purchase', order.total, order.items.map(function (i) { return { item_id: i.id, item_name: i.name, quantity: i.qty, price: i.price }; }));
+      if (window.WATrack) window.WATrack('purchase', order.total, order.items.map(function (i) { return { item_id: i.id, item_name: i.name, quantity: i.qty, price: i.price }; }), order.id);
     };
     if (order.pay === 'mono') {
       // онлайн-оплата: зберегти замовлення на сервері, отримати рахунок monobank і перейти на сторінку оплати
@@ -369,6 +369,8 @@
   if (window.WABackend && window.WABackend.monoEnabled) $('monoOpt').hidden = false;
   if (paidId && window.WABackend && window.WABackend.enabled) { showPaid(paidId); return; }
   renderSummary();
+  // початок оформлення (лише якщо в кошику є товари)
+  if (lines().length && window.WATrack) window.WATrack('begin_checkout', total(), lines().map(function (l) { return { item_id: l.p.id, item_name: l.p.n, quantity: l.q, price: l.p.p }; }));
   // оптовий клієнт: підтягнути актуальну знижку й перерахувати суму
   if (window.WAWholesale) window.WAWholesale.refresh().then(function () { if (lines().length) renderSummary(); }).catch(function () {});
   if (window.fetch) {
