@@ -218,7 +218,7 @@
       });
     });
   }
-  new MutationObserver(labelTables).observe(document.getElementById('app'), { childList: true, subtree: true });
+  new MutationObserver(labelTables).observe(document.body, { childList: true, subtree: true });
 
   /* ---------- Замовлення ---------- */
   var tag = function (st) { st = st || 'new'; return '<span class="tag tag--' + st + '">' + STATUS[st] + '</span>'; };
@@ -273,7 +273,9 @@
       '<label class="fld">Статус оплати<select id="fPaid"' + dis(a) + '><option value="0"' + (o.paid ? '' : ' selected') + '>Не оплачено</option><option value="1"' + (o.paid ? ' selected' : '') + '>Оплачено</option></select></label>' +
       '<label class="fld">Дата оплати<input id="fPaidAt" type="date" value="' + (o.paid_at ? o.paid_at.slice(0, 10) : '') + '"' + dis(a) + '></label>' +
       '<label class="fld wide">Номер документа (рахунок / накладна)<input id="fInvoice" value="' + esc(o.invoice || '') + '"' + dis(a) + '></label>' +
-      '<div class="wide cab__actions"><button class="btn" type="submit">Зберегти</button><button class="btn btn--ghost" type="button" data-close>Закрити</button><span class="status" id="orderStatus"></span></div>' +
+      '<div class="wide cab__actions"><button class="btn" type="submit">Зберегти</button><button class="btn btn--ghost" type="button" data-close>Закрити</button>' +
+      (user.role === 'admin' ? '<button type="button" class="rm" id="orderDelete" style="display:inline;margin-left:auto">Видалити замовлення</button>' : '') +
+      '<span class="status" id="orderStatus"></span></div>' +
       '</form></div>';
     $('orderForm').addEventListener('submit', function (e) {
       e.preventDefault();
@@ -286,6 +288,18 @@
       }
       status('orderStatus', 'Збереження…');
       saveOrder(o, patch).then(function () {
+        $('orderModal').hidden = true;
+        renderNav();
+        if (pane === 'accounting') renderAccounting(); else renderOrders();
+      }).catch(function (err) { status('orderStatus', err.message, 'bad'); });
+    });
+    // видалення замовлення (лише адміністратор; сервер теж перевіряє)
+    if ($('orderDelete')) $('orderDelete').addEventListener('click', function () {
+      if (!confirm('Видалити замовлення ' + o.id + ' назавжди? Його не можна буде відновити. Якщо замовлення просто не відбулося, краще позначте його «Скасоване».')) return;
+      status('orderStatus', 'Видалення…');
+      (BE.enabled ? BE.deleteOrder(o.id) : Promise.resolve()).then(function () {
+        orders = orders.filter(function (x) { return x !== o; });
+        if (!BE.enabled) { try { localStorage.setItem('winauto-admin-demo', JSON.stringify(orders)); } catch (e) {} }
         $('orderModal').hidden = true;
         renderNav();
         if (pane === 'accounting') renderAccounting(); else renderOrders();
@@ -378,7 +392,7 @@
       var acts = c.status === 'pending'
         ? '<button type="button" class="btn btn--sm" data-act="approve">Схвалити</button><button type="button" class="rm" style="display:inline" data-act="reject">Відхилити</button>'
         : c.status === 'approved'
-          ? '<button type="button" class="btn btn--sm btn--ghost" data-act="save">Зберегти знижку</button><button type="button" class="rm" style="display:inline" data-act="reject">Відключити</button>'
+          ? '<button type="button" class="btn btn--sm" data-act="orders">Замовлення і звірка</button><button type="button" class="btn btn--sm btn--ghost" data-act="save">Зберегти знижку</button><button type="button" class="rm" style="display:inline" data-act="reject">Відключити</button>'
           : '<button type="button" class="btn btn--sm btn--ghost" data-act="approve">Схвалити</button>';
       return '<tr data-client="' + esc(c.id) + '"><td>' + day(c.created_at) + '</td>' +
         '<td><b>' + esc(c.last_name + ' ' + c.first_name) + '</b>' + (c.business_type ? '<br><span class="tag">' + esc(c.business_type) + '</span>' : '') + (c.company ? '<br><small>' + esc(c.company) + '</small>' : '') + '</td>' +
@@ -444,6 +458,7 @@
     var b = e.target.closest('[data-act]'), tr = e.target.closest('[data-client]');
     if (!b || !tr) return;
     var c = clients.filter(function (x) { return x.id === tr.dataset.client; })[0];
+    if (b.dataset.act === 'orders') { openRecon(c); return; }
     var disc = parseFloat(tr.querySelector('[data-disc]').value);
     if (!(disc >= 0 && disc <= 90)) { status('wsStatus', 'Знижка має бути від 0 до 90%.', 'bad'); return; }
     if (b.dataset.act === 'reject' && !confirm('Відхилити / відключити клієнта ' + c.last_name + ' ' + c.first_name + '?')) return;
@@ -580,5 +595,84 @@
     if (!confirm('Видалити працівника ' + (editingStaff.name || editingStaff.email) + '? Він більше не зможе увійти.')) return;
     staffCall('delete', { id: editingStaff.id }).then(function () { staffDone('Працівника видалено.'); })
       .catch(function (err) { status('stStatus', err.message, 'bad'); });
+  });
+
+  /* ---------- Звірка з оптовим клієнтом ---------- */
+  var reconClient = null;
+  function clientOrders(c) {
+    return orders.filter(function (o) { return (o.customer_id && o.customer_id === c.id) || (!o.customer_id && c.phone && o.phone === c.phone); })
+      .sort(function (a, b) { return (a.created_at || '') < (b.created_at || '') ? -1 : 1; });
+  }
+  function reconList() {
+    var from = $('rcFrom').value, to = $('rcTo').value, cancelled = $('rcCancelled').checked;
+    return clientOrders(reconClient).filter(function (o) {
+      var d = (o.created_at || '').slice(0, 10);
+      if (from && d < from) return false;
+      if (to && d > to) return false;
+      if (!cancelled && (o.status || 'new') === 'cancelled') return false;
+      return true;
+    });
+  }
+  function renderRecon() {
+    var list = reconList(), sum = 0, paid = 0, base = 0;
+    list.forEach(function (o) {
+      if ((o.status || 'new') === 'cancelled') return;
+      sum += +o.total || 0; base += +(o.total_base || o.total) || 0; if (o.paid) paid += +o.total || 0;
+    });
+    $('rcKpis').innerHTML = [['Замовлень', list.filter(function (o) { return (o.status || 'new') !== 'cancelled'; }).length], ['Сума покупок, грн', money(sum)],
+      ['Оплачено, грн', money(paid)], ['Заборгованість, грн', money(sum - paid)], ['Економія на знижці, грн', money(base - sum)]]
+      .map(function (k) { return '<div class="kpi"><b>' + k[1] + '</b><span>' + k[0] + '</span></div>'; }).join('');
+    $('rcRows').innerHTML = list.map(function (o) {
+      var cancelled = (o.status || 'new') === 'cancelled';
+      return '<tr' + (cancelled ? ' style="opacity:.55"' : '') + '><td><b>' + esc(o.id) + '</b></td><td>' + day(o.created_at) + '</td>' +
+        '<td class="num">' + money(o.total) + ' грн' + (o.discount ? '<br><small>знижка ' + o.discount + '%</small>' : '') + '</td>' +
+        '<td>' + paidTag(o) + (o.paid_at ? '<br><small>' + day(o.paid_at) + '</small>' : '') + '</td><td>' + tag(o.status) + '</td>' +
+        '<td><small>' + esc((o.items || []).map(function (i) { return i.name + ' × ' + i.qty; }).join('; ')) + '</small></td></tr>';
+    }).join('') || '<tr><td colspan="6" class="empty">За цей період замовлень немає.</td></tr>';
+  }
+  function openRecon(c) {
+    reconClient = c;
+    $('rcTitle').textContent = 'Звірка: ' + c.last_name + ' ' + c.first_name + (c.company ? ' · ' + c.company : '');
+    $('rcSub').textContent = (c.business_type ? c.business_type + ' · ' : '') + c.phone + ' · ' + c.email + ' · знижка ' + (+c.discount || 0) + '%';
+    var first = clientOrders(c)[0];
+    $('rcFrom').value = first ? first.created_at.slice(0, 10) : '';
+    $('rcTo').value = new Date().toISOString().slice(0, 10);
+    $('rcCancelled').checked = false;
+    renderRecon();
+    $('reconModal').hidden = false;
+  }
+  ['rcFrom', 'rcTo', 'rcCancelled'].forEach(function (id) { $(id).addEventListener('change', renderRecon); });
+  $('rcMonth').addEventListener('click', function () {
+    var d = new Date(); $('rcTo').value = d.toISOString().slice(0, 10);
+    d.setDate(1); $('rcFrom').value = d.toISOString().slice(0, 10); renderRecon();
+  });
+  $('rcQuarter').addEventListener('click', function () {
+    var d = new Date(); $('rcTo').value = d.toISOString().slice(0, 10);
+    d.setMonth(d.getMonth() - 3); $('rcFrom').value = d.toISOString().slice(0, 10); renderRecon();
+  });
+  $('reconModal').addEventListener('click', function (e) {
+    if (e.target === $('reconModal') || e.target.closest('[data-close]')) $('reconModal').hidden = true;
+  });
+  // акт звірки у файл для Excel
+  $('rcExport').addEventListener('click', function () {
+    var c = reconClient, list = reconList();
+    var cell = function (v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; };
+    var num = function (v) { return String(Math.round((+v || 0) * 100) / 100).replace('.', ','); };
+    var sum = 0, paid = 0;
+    var rows = [['Акт звірки — Win Auto'], ['Клієнт', c.last_name + ' ' + c.first_name + (c.company ? ', ' + c.company : '')], ['Телефон', c.phone], ['E-mail', c.email],
+      ['Період', ($('rcFrom').value || '…') + ' — ' + ($('rcTo').value || '…')], [],
+      ['Номер замовлення', 'Дата', 'Сума, грн', 'Знижка, %', 'Оплачено', 'Дата оплати', 'Статус', 'Товари']];
+    list.forEach(function (o) {
+      var cancelled = (o.status || 'new') === 'cancelled';
+      if (!cancelled) { sum += +o.total || 0; if (o.paid) paid += +o.total || 0; }
+      rows.push([o.id, day(o.created_at), num(o.total), o.discount || 0, o.paid ? 'так' : 'ні', day(o.paid_at), STATUS[o.status || 'new'],
+        (o.items || []).map(function (i) { return i.name + ' × ' + i.qty; }).join('; ')]);
+    });
+    rows.push([], ['Разом покупок, грн', num(sum)], ['Оплачено, грн', num(paid)], ['Заборгованість, грн', num(sum - paid)]);
+    var csv = '﻿' + rows.map(function (r) { return r.map(cell).join(';'); }).join('\r\n');
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    a.download = 'akt-zvirky-' + (c.last_name || 'klient').replace(/\s+/g, '-') + '-' + new Date().toISOString().slice(0, 10) + '.csv';
+    document.body.appendChild(a); a.click(); a.remove();
   });
 })();

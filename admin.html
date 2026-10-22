@@ -8,8 +8,8 @@
 <script>
   try { document.documentElement.dataset.theme = localStorage.getItem('winauto-theme') || 'dark'; } catch (e) {}
 </script>
-<link rel="stylesheet" href="styles.css?v=46">
-<link rel="stylesheet" href="admin.css?v=46">
+<link rel="stylesheet" href="styles.css?v=48">
+<link rel="stylesheet" href="admin.css?v=48">
 </head>
 <body class="admin">
 
@@ -316,6 +316,29 @@
   </div>
 </div>
 
+<!-- Звірка з оптовим клієнтом -->
+<div class="overlay" id="reconModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" style="max-width:980px">
+    <button class="x" type="button" data-close aria-label="Закрити">×</button>
+    <h2 id="rcTitle" style="margin:0 0 4px"></h2>
+    <p class="help" id="rcSub" style="margin:0 0 14px"></p>
+    <div class="adm__row">
+      <label class="fld">Від<input id="rcFrom" type="date"></label>
+      <label class="fld">До<input id="rcTo" type="date"></label>
+      <span class="cab__actions" style="flex:1 1 auto"><button class="btn btn--sm btn--ghost" type="button" id="rcMonth">Цей місяць</button><button class="btn btn--sm btn--ghost" type="button" id="rcQuarter">3 місяці</button></span>
+    </div>
+    <label class="chk" style="margin:10px 0 14px"><input type="checkbox" id="rcCancelled"> Показувати скасовані</label>
+    <div class="kpis" id="rcKpis"></div>
+    <div class="tbl__wrap adm" style="display:block;padding:0">
+      <table class="tbl">
+        <thead><tr><th>№</th><th>Дата</th><th>Сума</th><th>Оплата</th><th>Статус</th><th>Товари</th></tr></thead>
+        <tbody id="rcRows"></tbody>
+      </table>
+    </div>
+    <div class="cab__actions" style="margin-top:14px"><button class="btn" type="button" id="rcExport">Завантажити акт звірки (Excel)</button><button class="btn btn--ghost" type="button" data-close>Закрити</button></div>
+  </div>
+</div>
+
 <!-- Новий оптовий клієнт -->
 <div class="overlay" id="wsModal" hidden>
   <div class="modal" role="dialog" aria-modal="true" style="max-width:640px">
@@ -331,7 +354,7 @@
       <label class="fld">Знижка, %<input id="wcDisc" type="number" min="0" max="90" step="0.5" value="5"></label>
       <label class="fld">E-mail для входу на сайт<input id="wcEmail" type="email" autocomplete="off"></label>
       <label class="fld">Пароль для входу <i>(мін. 8 символів)</i>
-        <span class="adm__row" style="flex-wrap:nowrap;gap:6px"><input id="wcPass" type="text" autocomplete="new-password" style="flex:1"><button class="btn btn--sm btn--ghost" type="button" id="wcGen">Згенерувати</button></span>
+        <span class="passrow"><input id="wcPass" type="text" autocomplete="new-password"><button class="btn btn--sm btn--ghost" type="button" id="wcGen">Згенерувати</button></span>
       </label>
       <p class="help wide" style="margin:0">Клієнт входить у «Мій кабінет» на сайті з цим e-mail і паролем — і бачить ціни зі своєю знижкою. Передайте йому дані для входу особисто.</p>
       <div class="wide cab__actions">
@@ -406,9 +429,9 @@
   </div>
 </div>
 
-<script src="backend.js?v=46"></script>
-<script src="wholesale.js?v=46"></script>
-<script src="admin.js?v=46"></script>
-<script src="admin-shell.js?v=46"></script>
+<script src="backend.js?v=48"></script>
+<script src="wholesale.js?v=48"></script>
+<script src="admin.js?v=48"></script>
+<script src="admin-shell.js?v=48"></script>
 </body>
 </html>

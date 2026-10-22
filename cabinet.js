@@ -137,13 +137,31 @@
   });
 
   /* ---------- Замовлення ---------- */
-  var orders = store.get('orders', []).slice().reverse();
-  $('orders').innerHTML = orders.map(function (o) {
-    var n = o.items.reduce(function (s, i) { return s + i.qty; }, 0);
-    return '<div class="order"><b>' + esc(o.id) + '</b>' + new Date(o.date).toLocaleDateString('uk-UA') +
+  // Оптовий клієнт, що увійшов, бачить лише свої замовлення з сервера (з будь-якого пристрою);
+  // гість — замовлення, оформлені в цьому браузері
+  var ORDER_STATUS = { 'new': 'нове', confirmed: 'підтверджене', shipped: 'відправлене', done: 'виконане', cancelled: 'скасоване' };
+  function orderRow(o, date) {
+    var n = (o.items || []).reduce(function (s, i) { return s + (+i.qty || 0); }, 0);
+    return '<div class="order"><b>' + esc(o.id) + '</b>' + new Date(date).toLocaleDateString('uk-UA') +
       ' · ' + n + ' шт. · ' + Math.round(o.total).toLocaleString('uk-UA') + ' грн' +
-      '<small>' + esc(o.carrier + ', ' + o.city + ', ' + o.warehouse) + '</small></div>';
-  }).join('') || '<p class="note" style="margin:0">Замовлень ще немає.</p>';
+      (o.status ? ' · <b style="margin:0">' + esc(ORDER_STATUS[o.status] || o.status) + '</b>' : '') +
+      (o.paid ? ' · оплачено' : '') +
+      '<small>' + esc([o.carrier, o.city, o.warehouse].filter(Boolean).join(', ')) + (o.ttn ? ' · ТТН ' + esc(o.ttn) : '') + '</small></div>';
+  }
+  function renderMyOrders() {
+    var WSo = window.WAWholesale, BEo = window.WABackend;
+    if (BEo && BEo.enabled && WSo && WSo.current()) {
+      $('orders').innerHTML = '<p class="note" style="margin:0">Завантаження…</p>';
+      BEo.myOrders().then(function (list) {
+        $('orders').innerHTML = list.map(function (o) { return orderRow(o, o.created_at); }).join('') ||
+          '<p class="note" style="margin:0">Замовлень ще немає.</p>';
+      }).catch(function () { $('orders').innerHTML = '<p class="note" style="margin:0">Не вдалося завантажити замовлення. Оновіть сторінку.</p>'; });
+      return;
+    }
+    var local = store.get('orders', []).slice().reverse();
+    $('orders').innerHTML = local.map(function (o) { return orderRow(o, o.date); }).join('') || '<p class="note" style="margin:0">Замовлень ще немає.</p>';
+  }
+  renderMyOrders();
 
   /* ---------- Шапка ---------- */
   $('themeBtn').addEventListener('click', function () {
@@ -185,6 +203,7 @@
   }
   function wsMsg(t, bad) { var el = $('wsStatus'); if (el) { el.textContent = t; el.style.color = bad ? 'var(--accent)' : ''; } }
   function wsRender() {
+    renderMyOrders();
     var c = WS.current();
     if (!c) {
       $('wsBody').innerHTML = '<p class="note" style="margin:0 0 12px">СТО, магазинам і постійним покупцям — індивідуальна знижка на всі товари. Зареєструйтеся як оптовий клієнт: після перевірки адміністратор призначить вашу знижку.</p>' +

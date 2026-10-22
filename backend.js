@@ -99,6 +99,18 @@ window.WABackend = (function () {
       return call('/functions/v1/staff-admin', 'POST', body);
     },
     listOrders: function () { return call('/rest/v1/orders?select=*&order=created_at.desc&limit=2000'); },
+    deleteOrder: function (id) {
+      return call('/rest/v1/orders?id=eq.' + encodeURIComponent(id), 'DELETE', null, { 'Prefer': 'return=representation' }).then(function (rows) {
+        if (!rows || !rows.length) throw new Error('Замовлення не видалено: немає права або його вже немає.');
+      });
+    },
+    // оптовий клієнт: лише власні замовлення (правило сервера «client reads own orders»)
+    myOrders: function () {
+      var s = load(CLIENT);
+      if (!s) return Promise.resolve([]);
+      use(s, CLIENT);
+      return call('/rest/v1/orders?select=id,created_at,items,total,discount,status,ttn,paid,pay,carrier,city,warehouse&customer_id=eq.' + s.user.id + '&order=created_at.desc');
+    },
     updateOrder: function (id, patch) {
       return call('/rest/v1/orders?id=eq.' + encodeURIComponent(id), 'PATCH', patch, { 'Prefer': 'return=minimal' });
     },

@@ -155,3 +155,8 @@ body.admin { padding-bottom: 70px; }
   .adm .tbl img { width: 64px; height: 64px; }
   .ord .req tr { grid-template-columns: 1fr auto; }
 }
+
+/* поле пароля з кнопкою «Згенерувати» — не стискається на телефоні */
+.passrow { display: flex; gap: 6px; align-items: stretch; width: 100%; }
+.passrow input { flex: 1 1 auto; min-width: 0; width: auto; }
+.passrow .btn { flex: 0 0 auto; width: auto !important; white-space: nowrap; }

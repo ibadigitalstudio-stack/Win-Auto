@@ -291,7 +291,24 @@
     } else renderSteps(s);
     var params = {};
     URL_KEYS.forEach(function (k) { params[k] = state[k]; });
-    try { history.replaceState(null, '', catalogUrl(params)); } catch (e) {}
+    // кожен крок (марка → модель → категорія) — окремий запис в історії, щоб «Назад» у браузері
+    // повертав на попередній крок каталогу, а не на головну; пошук і фільтри історію не засмічують
+    var nav = [state.brand, state.model, state.cat, state.sub, state.num, state.vin].join('|');
+    try {
+      if (lastNav !== null && nav !== lastNav && !restoring) history.pushState(null, '', catalogUrl(params));
+      else history.replaceState(null, '', catalogUrl(params));
+    } catch (e) {}
+    lastNav = nav;
+  }
+  var lastNav = null, restoring = false;
+  function readUrl() {
+    var params = new URLSearchParams(location.search);
+    URL_KEYS.forEach(function (k) { state[k] = params.get(k) || ''; });
+    if (BRANDS.indexOf(state.brand) === -1) state.brand = state.model = '';
+    if (models(state.brand).indexOf(state.model) === -1) state.model = '';
+    if (!CAT[state.cat] && state.cat !== 'all') state.cat = state.sub = '';
+    state.num = norm(state.num);
+    return params;
   }
 
   /* ---------- Головна сторінка ---------- */
@@ -587,13 +604,16 @@
   renderRate();
 
   if (isCatalog) {
-    var params = new URLSearchParams(location.search);
-    URL_KEYS.forEach(function (k) { if (params.get(k)) state[k] = params.get(k); });
-    if (BRANDS.indexOf(state.brand) === -1) state.brand = state.model = '';
-    if (models(state.brand).indexOf(state.model) === -1) state.model = '';
-    if (!CAT[state.cat] && state.cat !== 'all') state.cat = state.sub = '';
-    state.num = norm(state.num);
+    var params = readUrl();
     $('q').value = state.q;
+    // кнопка «Назад» / «Вперед» у браузері: показати відповідний крок каталогу
+    window.addEventListener('popstate', function () {
+      readUrl();
+      $('q').value = state.q;
+      $('modal').hidden = true;
+      restoring = true; update(); restoring = false;
+      window.scrollTo(0, 0);
+    });
     $('q').addEventListener('input', function (e) { state.q = e.target.value; update(); });
     $('sort').addEventListener('change', function (e) { state.sort = e.target.value; renderGrid(); });
     $('inStock').addEventListener('change', function (e) { state.stock = e.target.checked; update(); });
