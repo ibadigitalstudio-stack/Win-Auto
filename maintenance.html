@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="uk" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Сайт оновлюється — Win Auto</title>
+<script>
+  try { document.documentElement.dataset.theme = localStorage.getItem('winauto-theme') || 'dark'; } catch (e) {}
+</script>
+<link rel="stylesheet" href="styles.css?v=49">
+<style>
+  .mnt { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 32px 16px; text-align: center; }
+  .mnt h1 { margin: 12px 0 0; font-size: clamp(24px, 5vw, 36px); }
+  .mnt p { margin: 0; max-width: 480px; color: var(--muted); line-height: 1.5; }
+  .mnt__links { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+</style>
+</head>
+<body>
+<main class="mnt">
+  <span class="logo" aria-label="Win Auto">
+    <span class="logo__mark"><i></i><i></i><i></i></span>
+    <span class="logo__txt">WIN<b>AUTO</b></span>
+  </span>
+  <h1>Сайт оновлюється</h1>
+  <p>Ми готуємо новий онлайн-каталог і скоро повернемося. Тим часом підберемо запчастини для вашого авто за телефоном або поштою.</p>
+  <div class="mnt__links">
+    <a class="btn" href="tel:+380930210975">+38 (093) 021-09-75</a>
+    <a class="btn btn--ghost" href="mailto:info@win-auto.com.ua">info@win-auto.com.ua</a>
+  </div>
+  <p>Пн–Сб 9:00–19:00 · Волинська обл., с. Гаразджа, вул. Рівненська, 1</p>
+</main>
+</body>
+</html>

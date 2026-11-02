@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="uk" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Адмін-панель — Win Auto</title>
+<script>
+  try { document.documentElement.dataset.theme = localStorage.getItem('winauto-theme') || 'dark'; } catch (e) {}
+</script>
+<link rel="stylesheet" href="styles.css?v=49">
+<link rel="stylesheet" href="admin.css?v=49">
+</head>
+<body class="admin">
+
+<header class="header">
+  <div class="wrap header__in">
+    <button type="button" class="burger adm__burger" id="admBurger" aria-label="Розділи адмін-панелі" hidden><span></span><span></span><span></span></button>
+    <a href="index.html" class="logo" aria-label="Win Auto">
+      <span class="logo__mark"><i></i><i></i><i></i></span>
+      <span class="logo__txt">WIN<b>AUTO</b></span>
+    </a>
+    <span class="adm__badge">Адмін-панель</span>
+    <span class="grow"></span>
+    <span class="adm__user" id="userBox" hidden><b id="userName"></b><small id="userRole"></small></span>
+    <button class="btn btn--ghost btn--sm" type="button" id="myPass" hidden>Пароль</button>
+    <button class="btn btn--ghost btn--sm" type="button" id="logout" hidden>Вийти</button>
+  </div>
+</header>
+
+<!-- Вхід -->
+<main class="wrap adm__login" id="login">
+  <section class="box">
+    <h1>Вхід до адмін-панелі</h1>
+
+    <form id="loginForm" method="post" action="#" hidden>
+      <label class="fld">E-mail<input id="lEmail" name="email" type="email" autocomplete="username" required></label>
+      <label class="fld">Пароль<input id="lPass" name="password" type="password" autocomplete="current-password" required></label>
+      <label class="chk" style="margin:0 0 14px"><input type="checkbox" id="lRemember" checked> Не виходити на цьому пристрої</label>
+      <button class="btn btn--wide" type="submit">Увійти</button>
+      <p class="help" style="margin:10px 0 0">Браузер запропонує зберегти e-mail і пароль — погоджуйтеся лише на своєму пристрої.</p>
+      <p class="status" id="loginStatus"></p>
+    </form>
+
+    <div id="demoLogin" hidden>
+      <p class="help">Сервер входу ще не підключено, тому панель працює в <b>демо-режимі</b>: оберіть роль, щоб побачити, що доступно кожному співробітнику. Замовлення тут — приклади та ті, що оформлені в цьому браузері.</p>
+      <div class="roles">
+        <button type="button" class="role" data-role="admin"><b>Адміністратор</b><small>Повний доступ: замовлення, облік, товари, тексти сайту, доступи</small></button>
+        <button type="button" class="role" data-role="manager"><b>Менеджер</b><small>Замовлення: перегляд, статуси, ТТН, нотатки</small></button>
+        <button type="button" class="role" data-role="accountant"><b>Бухгалтер</b><small>Замовлення (перегляд) та облік оплат, звіт, експорт</small></button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Панель -->
+<div class="wrap adm" id="app" hidden>
+  <div class="adm__shade" id="admShade" hidden></div>
+  <aside class="adm__side" id="admSide" aria-label="Розділи адмін-панелі">
+    <div class="adm__sidehead">
+      <span class="adm__sideuser"><b id="sideName"></b><small id="sideRole"></small></span>
+      <button type="button" class="x" id="admClose" aria-label="Закрити">×</button>
+    </div>
+    <nav id="nav"></nav>
+    <div class="adm__sidefoot"><a href="index.html">← Відкрити сайт</a><span><button type="button" class="rm" id="sidePass" style="display:inline;margin-right:12px">Пароль</button><button type="button" class="rm" id="sideLogout" style="display:inline">Вийти</button></span></div>
+  </aside>
+
+  <main class="adm__main">
+
+    <!-- Замовлення -->
+    <section data-pane="orders" hidden>
+      <h1>Замовлення</h1>
+      <div class="kpis" id="orderKpis"></div>
+      <div class="box">
+        <div class="adm__row">
+          <label class="fld">Статус<select id="oStatus"></select></label>
+          <label class="fld">Пошук<input id="oSearch" autocomplete="off" placeholder="Номер, ім'я або телефон"></label>
+        </div>
+        <p class="status" id="ordersStatus"></p>
+      </div>
+      <div class="box">
+        <div class="tbl__wrap">
+          <table class="tbl">
+            <thead><tr><th>№</th><th>Дата</th><th>Клієнт</th><th>Сума</th><th>Оплата</th><th>Статус</th><th></th></tr></thead>
+            <tbody id="orderRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Облік -->
+    <section data-pane="accounting" hidden>
+      <h1>Облік замовлень</h1>
+      <div class="box">
+        <div class="adm__row">
+          <label class="fld">Від<input id="accFrom" type="date"></label>
+          <label class="fld">До<input id="accTo" type="date"></label>
+          <label class="fld">Оплата<select id="accPaid"><option value="">Усі</option><option value="1">Оплачені</option><option value="0">Не оплачені</option></select></label>
+          <button class="btn btn--ghost" type="button" id="accExport">Експорт у CSV</button>
+        </div>
+      </div>
+      <div class="kpis" id="accKpis"></div>
+      <div class="box">
+        <div class="tbl__wrap">
+          <table class="tbl">
+            <thead><tr><th>№</th><th>Дата</th><th>Клієнт</th><th>Спосіб оплати</th><th>Сума, грн</th><th>Оплачено</th><th>Дата оплати</th><th>№ документа</th></tr></thead>
+            <tbody id="accRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Оптові клієнти -->
+    <section data-pane="wholesale" hidden>
+      <h1>Оптові клієнти</h1>
+      <div class="box">
+        <div class="adm__row" style="justify-content:space-between">
+          <p class="help" style="margin:0">Клієнти реєструються самі в кабінеті на сайті, або ви додаєте їх тут — одразу схваленими й зі знижкою.</p>
+          <button class="btn" type="button" id="wsAdd">+ Додати клієнта</button>
+        </div>
+      </div>
+      <div class="adm__tabs" id="wsTabs">
+        <button type="button" class="on" data-ws="pending">Заявки на модерації</button>
+        <button type="button" data-ws="approved">Оптові клієнти</button>
+        <button type="button" data-ws="rejected">Відхилені</button>
+      </div>
+      <div class="box">
+        <div class="tbl__wrap">
+          <table class="tbl">
+            <thead><tr><th>Дата</th><th>Клієнт</th><th>Контакти й адреса</th><th>Покупки</th><th>Знижка, %</th><th></th></tr></thead>
+            <tbody id="wsRows"></tbody>
+          </table>
+        </div>
+        <p class="status" id="wsStatus"></p>
+      </div>
+    </section>
+
+    <!-- Ціни та прайс-листи -->
+    <section data-pane="prices" hidden>
+      <h1>Ціни та прайс-листи</h1>
+      <div class="box">
+        <h2>Вибір товарів</h2>
+        <div class="adm__row">
+          <label class="fld">Марка<select id="pBrand"></select></label>
+          <label class="fld">Модель<select id="pModel"></select></label>
+          <label class="fld">Категорія<select id="pCat"></select></label>
+        </div>
+        <label class="chk" style="margin-top:12px"><input type="checkbox" id="pStock" checked> Лише товари в наявності</label>
+        <div class="adm__row" style="margin-top:12px">
+          <label class="fld">Зміна ціни, %<input id="pPct" type="number" step="0.1" value="0" placeholder="напр. 5 або -10"></label>
+          <label class="fld">Округлення<select id="pRound"><option value="1">до 1 грн</option><option value="10">до 10 грн</option><option value="0">без округлення</option></select></label>
+        </div>
+        <p class="status" id="pInfo"></p>
+      </div>
+      <div class="kpis">
+        <div class="box" style="margin:0">
+          <h2>Прайс-лист</h2>
+          <p class="help" style="margin-top:0">Файл для Excel із вибраними товарами. Ціни у файлі змінюються на вказаний відсоток, на сайті — ні. Зручно для оптових клієнтів і партнерів.</p>
+          <button class="btn" type="button" id="pList">Сформувати прайс-лист</button>
+        </div>
+        <div class="box" style="margin:0">
+          <h2>Змінити ціни на сайті</h2>
+          <p class="help" style="margin-top:0">Ціни всіх вибраних товарів зміняться на вказаний відсоток. Зміни з'являться на сайті після кнопки «Опублікувати на сайті».</p>
+          <button class="btn btn--ghost" type="button" id="pApply">Змінити ціни</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Товари -->
+    <section data-pane="products" hidden>
+      <h1>Товари</h1>
+      <div class="box">
+        <div class="adm__row">
+          <label class="fld">Марка<select id="aBrand"></select></label>
+          <label class="fld">Модель<select id="aModel"></select></label>
+          <label class="fld">Пошук<input id="aSearch" autocomplete="off" placeholder="Назва або номер деталі"></label>
+          <button class="btn" type="button" id="addBtn">+ Додати товар</button>
+        </div>
+        <p class="status" id="listStatus"></p>
+      </div>
+      <div class="box">
+        <div class="tbl__wrap">
+          <table class="tbl">
+            <thead><tr><th>Фото</th><th>Назва</th><th>Модель</th><th>Ціна, грн</th><th>У наявності</th><th></th></tr></thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+        <div class="more" style="margin:16px 0 0"><button class="btn btn--ghost" id="moreRows" type="button" hidden>Показати ще</button></div>
+      </div>
+    </section>
+
+    <!-- Контакти, тексти, реквізити (одна форма, три розділи) -->
+    <form id="settings" novalidate>
+      <section data-pane="contacts" hidden>
+        <h1>Контакти</h1>
+        <div class="box frm">
+          <label class="fld">Телефон<input id="sPhone" placeholder="+380930210975"></label>
+          <label class="fld">E-mail<input id="sEmail" type="email"></label>
+          <label class="fld wide">Адреса<input id="sAddress"></label>
+          <label class="fld">Режим роботи<input id="sHours"></label>
+          <label class="fld">Текст у червоній смужці<input id="sTopbar"></label>
+          <div class="wide"><button class="btn" type="submit">Застосувати</button></div>
+        </div>
+      </section>
+      <section data-pane="texts" hidden>
+        <h1>Головна сторінка</h1>
+        <div class="box frm">
+          <label class="fld">Заголовок<input id="sHeroTitle"></label>
+          <label class="fld">Виділена червоним частина<input id="sHeroAccent"></label>
+          <label class="fld wide">Текст під заголовком<textarea id="sHeroSub" rows="3"></textarea></label>
+          <div class="wide"><button class="btn" type="submit">Застосувати</button></div>
+        </div>
+      </section>
+      <section data-pane="bank" hidden>
+        <h1>Реквізити для оплати</h1>
+        <div class="box frm">
+          <label class="fld">Отримувач<input id="sBankName"></label>
+          <label class="fld">ЄДРПОУ / ІПН<input id="sBankCode"></label>
+          <label class="fld">IBAN<input id="sBankIban"></label>
+          <label class="fld">Банк<input id="sBankBank"></label>
+          <p class="help wide" style="margin:0">Ці реквізити показуються покупцям при оплаті на рахунок і в розділі «Реквізити Продавця» договору оферти.</p>
+          <div class="wide"><button class="btn" type="submit">Застосувати</button></div>
+        </div>
+      </section>
+      <section data-pane="tracking" hidden>
+        <h1>Аналітика та пікселі</h1>
+        <div class="box frm">
+          <p class="help wide" style="margin-top:0">Вставте лише ідентифікатори — сайт сам підключить потрібний код на всіх сторінках. Порожнє поле вимикає сервіс.</p>
+          <label class="fld">Facebook Pixel — ID пікселя<input id="tFb" inputmode="numeric" placeholder="123456789012345"></label>
+          <label class="fld">Google Analytics 4 — ID потоку<input id="tGa" placeholder="G-XXXXXXXXXX"></label>
+          <label class="fld">Google Tag Manager — ID контейнера<input id="tGtm" placeholder="GTM-XXXXXXX"></label>
+          <label class="fld">Google Ads — ID тегу конверсій<input id="tAds" placeholder="AW-123456789"></label>
+          <label class="fld">Google Search Console — код підтвердження<input id="tGsc" placeholder="код або весь метатег"></label>
+          <div class="wide help">
+            <b>Де взяти:</b>
+            <ul style="padding-left:20px;margin:6px 0">
+              <li>Facebook Pixel: Events Manager → Джерела даних → ваш піксель → ID.</li>
+              <li>Google Analytics: Адміністратор → Потоки даних → веб-потік → Ідентифікатор вимірювання.</li>
+              <li>Google Ads: Цілі → Конверсії → ваша дія «Покупка» → Налаштування тегу → «Встановити самостійно»: ID має вигляд AW-123456789. Окремий код події вставляти не потрібно — сайт сам надсилає подію purchase із сумою й номером замовлення.</li>
+              <li>Tag Manager: ID контейнера вгорі сторінки (GTM-…). Якщо GA4 і піксель уже налаштовані всередині GTM, окремо їх тут не вказуйте, щоб події не дублювалися.</li>
+              <li>Search Console: Додати ресурс → Префікс URL → спосіб «Тег HTML» → скопіюйте метатег сюди, опублікуйте, зачекайте кілька хвилин і натисніть «Підтвердити» в Search Console.</li>
+            </ul>
+          </div>
+          <div class="wide"><button class="btn" type="submit">Застосувати</button></div>
+        </div>
+      </section>
+      <p class="status" id="setStatus"></p>
+    </form>
+
+    <!-- Користувачі -->
+    <section data-pane="users" hidden>
+      <h1>Працівники та доступи</h1>
+      <div class="box">
+        <div class="adm__row" style="justify-content:space-between">
+          <p class="help" style="margin:0">Додавайте працівників, призначайте роль і за потреби — додаткові права понад роль.</p>
+          <button class="btn" type="button" id="staffAdd">+ Додати працівника</button>
+        </div>
+        <p class="status" id="staffStatus"></p>
+      </div>
+      <div class="box">
+        <div class="tbl__wrap">
+          <table class="tbl">
+            <thead><tr><th>Працівник</th><th>Роль</th><th>Додаткові права</th><th>Статус</th><th></th></tr></thead>
+            <tbody id="staffRows"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="box">
+        <h2>Що дає кожна роль</h2>
+        <table class="tbl">
+          <thead><tr><th>Роль</th><th>Замовлення</th><th>Облік</th><th>Оптові клієнти</th><th>Товари й ціни</th><th>Сайт</th><th>Працівники</th></tr></thead>
+          <tbody>
+            <tr><td><b>Адміністратор</b></td><td>повний</td><td>повний</td><td>повний</td><td>повний</td><td>повний</td><td>повний</td></tr>
+            <tr><td><b>Менеджер</b></td><td>статуси, ТТН, нотатки</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+            <tr><td><b>Бухгалтер</b></td><td>перегляд</td><td>оплати, документи, звіт</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+          </tbody>
+        </table>
+        <p class="help">Додаткові права відкривають працівнику відповідний розділ на додачу до його ролі. Наприклад, менеджеру можна дати «Облік і оплати», а бухгалтеру — «Оптові клієнти та знижки». Розділ «Працівники» доступний лише адміністраторам.</p>
+      </div>
+      <div class="box help" id="usersHelp"></div>
+    </section>
+
+    <!-- Підключення до GitHub -->
+    <section data-pane="github" hidden>
+      <h1>Підключення до GitHub</h1>
+      <div class="box">
+        <p class="help" style="margin-top:0">Товари, контакти й тексти зберігаються у файлах сайту на GitHub. Щоб публікувати їх зміни, потрібен ключ доступу. Для замовлень і обліку він не потрібен.</p>
+        <form id="connect" class="adm__row">
+          <label class="fld">Власник репозиторію<input id="owner" autocomplete="off" value="ibadigitalstudio-stack"></label>
+          <label class="fld">Репозиторій<input id="repo" autocomplete="off" value="Win-Auto"></label>
+          <label class="fld">Ключ доступу GitHub<input id="token" type="password" autocomplete="off" placeholder="github_pat_…"></label>
+          <button class="btn" type="submit">Підключитися</button>
+        </form>
+        <label class="chk" style="margin-top:10px"><input type="checkbox" id="remember"> Запам'ятати ключ на цьому пристрої</label>
+        <p class="status" id="connStatus"></p>
+        <details class="help">
+          <summary>Де взяти ключ доступу?</summary>
+          <ol>
+            <li>Увійдіть на github.com і відкрийте Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token.</li>
+            <li>У полі Repository access оберіть «Only select repositories» і вкажіть <code>Win-Auto</code>.</li>
+            <li>У Permissions → Repository permissions знайдіть <b>Contents</b> і поставте «Read and write».</li>
+            <li>Натисніть Generate token, скопіюйте ключ (починається з <code>github_pat_</code>) і вставте його сюди.</li>
+          </ol>
+          Ключ зберігається лише у вашому браузері й надсилається тільки на GitHub. Нікому його не передавайте.
+        </details>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Картка замовлення -->
+<div class="overlay" id="orderModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true">
+    <button class="x" type="button" data-close aria-label="Закрити">×</button>
+    <div id="orderBody"></div>
+  </div>
+</div>
+
+<!-- Звірка з оптовим клієнтом -->
+<div class="overlay" id="reconModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" style="max-width:980px">
+    <button class="x" type="button" data-close aria-label="Закрити">×</button>
+    <h2 id="rcTitle" style="margin:0 0 4px"></h2>
+    <p class="help" id="rcSub" style="margin:0 0 14px"></p>
+    <div class="adm__row">
+      <label class="fld">Від<input id="rcFrom" type="date"></label>
+      <label class="fld">До<input id="rcTo" type="date"></label>
+      <span class="cab__actions" style="flex:1 1 auto"><button class="btn btn--sm btn--ghost" type="button" id="rcMonth">Цей місяць</button><button class="btn btn--sm btn--ghost" type="button" id="rcQuarter">3 місяці</button></span>
+    </div>
+    <label class="chk" style="margin:10px 0 14px"><input type="checkbox" id="rcCancelled"> Показувати скасовані</label>
+    <div class="kpis" id="rcKpis"></div>
+    <div class="tbl__wrap adm" style="display:block;padding:0">
+      <table class="tbl">
+        <thead><tr><th>№</th><th>Дата</th><th>Сума</th><th>Оплата</th><th>Статус</th><th>Товари</th></tr></thead>
+        <tbody id="rcRows"></tbody>
+      </table>
+    </div>
+    <div class="cab__actions" style="margin-top:14px"><button class="btn" type="button" id="rcExport">Завантажити акт звірки (Excel)</button><button class="btn btn--ghost" type="button" data-close>Закрити</button></div>
+  </div>
+</div>
+
+<!-- Новий оптовий клієнт -->
+<div class="overlay" id="wsModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" style="max-width:640px">
+    <button class="x" type="button" data-close aria-label="Закрити">×</button>
+    <form id="wsForm" class="frm" novalidate>
+      <h2 class="wide" style="margin:0 0 14px">Новий оптовий клієнт</h2>
+      <label class="fld">Прізвище<input id="wcLast" autocomplete="off"></label>
+      <label class="fld">Ім'я<input id="wcFirst" autocomplete="off"></label>
+      <label class="fld">Тип діяльності<select id="wcType"><option value="">—</option><option>СТО</option><option>Розборка</option><option>Інтернет-магазин</option><option>Дилер</option><option>Автопарк</option></select></label>
+      <label class="fld">Назва фірми <i>(якщо є)</i><input id="wcCompany" autocomplete="off"></label>
+      <label class="fld wide">Адреса<input id="wcAddress" autocomplete="off"></label>
+      <label class="fld">Телефон<input id="wcPhone" type="tel" autocomplete="off" placeholder="+380…"></label>
+      <label class="fld">Знижка, %<input id="wcDisc" type="number" min="0" max="90" step="0.5" value="5"></label>
+      <label class="fld">E-mail для входу на сайт<input id="wcEmail" type="email" autocomplete="off"></label>
+      <label class="fld">Пароль для входу <i>(мін. 8 символів)</i>
+        <span class="passrow"><input id="wcPass" type="text" autocomplete="new-password"><button class="btn btn--sm btn--ghost" type="button" id="wcGen">Згенерувати</button></span>
+      </label>
+      <p class="help wide" style="margin:0">Клієнт входить у «Мій кабінет» на сайті з цим e-mail і паролем — і бачить ціни зі своєю знижкою. Передайте йому дані для входу особисто.</p>
+      <div class="wide cab__actions">
+        <button class="btn" type="submit">Додати клієнта</button>
+        <button class="btn btn--ghost" type="button" data-close>Скасувати</button>
+        <span class="status" id="wcStatus"></span>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Працівник -->
+<div class="overlay" id="staffModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" style="max-width:620px">
+    <button class="x" type="button" data-close aria-label="Закрити">×</button>
+    <form id="staffForm" class="frm" novalidate>
+      <h2 class="wide" id="staffTitle" style="margin:0 0 14px">Новий працівник</h2>
+      <label class="fld">Ім'я<input id="stName" autocomplete="off"></label>
+      <label class="fld">E-mail для входу<input id="stEmail" type="email" autocomplete="off"></label>
+      <label class="fld">Роль<select id="stRole"><option value="manager">Менеджер</option><option value="accountant">Бухгалтер</option><option value="admin">Адміністратор</option></select></label>
+      <label class="fld" id="stPassBox">Пароль <i>(мін. 8 символів)</i><input id="stPass" type="text" autocomplete="new-password"></label>
+      <div class="fld wide">Додаткові права
+        <div class="perms" id="stPerms"></div>
+      </div>
+      <label class="chk wide" id="stActiveBox"><input type="checkbox" id="stActive" checked> Обліковий запис активний (вимкнений працівник не може увійти)</label>
+      <div class="wide cab__actions">
+        <button class="btn" type="submit">Зберегти</button>
+        <button class="btn btn--ghost" type="button" id="stPassBtn">Змінити пароль</button>
+        <button class="rm" type="button" id="stDelete" style="display:inline">Видалити працівника</button>
+        <span class="status" id="stStatus"></span>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Редагування товару -->
+<div class="overlay" id="editor" hidden>
+  <div class="modal" role="dialog" aria-modal="true">
+    <button class="x" type="button" data-close aria-label="Закрити">×</button>
+    <form id="edit" class="frm" novalidate>
+      <h2 class="wide" id="editTitle" style="margin:0 0 14px">Товар</h2>
+      <label class="fld wide">Назва<input id="eName" required></label>
+      <label class="fld">Модель<select id="eModel"></select></label>
+      <label class="fld">Ціна, грн<input id="ePrice" type="number" min="0" step="0.01" required></label>
+      <label class="fld">Категорія<select id="eCat"></select></label>
+      <label class="fld">Підкатегорія<select id="eSub"></select></label>
+      <label class="fld">Тип<select id="eType"><option value="0">Аналог</option><option value="1">Оригінал</option></select></label>
+      <label class="fld">Наявність<select id="eStock"><option value="1">В наявності</option><option value="0">Під замовлення</option></select></label>
+      <label class="fld wide">Оригінальні номери (OE), через кому<input id="eOe" placeholder="1084168-S0-A, 1084168-00-E"></label>
+      <label class="fld">Артикул виробника <i>(необов'язково)</i><input id="eCode"></label>
+      <label class="fld">Короткий опис <i>(необов'язково)</i><input id="eDesc" maxlength="90"></label>
+      <div class="fld wide">Фото
+        <div class="frm__pic"><img id="ePic" alt=""><input id="eFile" type="file" accept="image/*"></div>
+      </div>
+      <div class="wide cab__actions">
+        <button class="btn" type="submit">Зберегти</button>
+        <button class="btn btn--ghost" type="button" data-close>Скасувати</button>
+        <span class="status bad" id="editStatus"></span>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Панель публікації змін каталогу й текстів -->
+<div class="bar" id="bar" hidden>
+  <div class="wrap bar__in">
+    <span id="pending"></span>
+    <span>
+      <button class="btn btn--ghost" type="button" id="discard">Скасувати зміни</button>
+      <button class="btn" type="button" id="publish">Опублікувати на сайті</button>
+    </span>
+  </div>
+</div>
+
+<script src="backend.js?v=49"></script>
+<script src="wholesale.js?v=49"></script>
+<script src="admin.js?v=49"></script>
+<script src="admin-shell.js?v=49"></script>
+</body>
+</html>
