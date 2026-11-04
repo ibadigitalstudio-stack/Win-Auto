@@ -66,7 +66,7 @@ Deno.serve(async () => {
     const cats: Record<string, string> = {};
     for (const c of JSON.parse(core.match(/window\.CATS=(\[.*?\]);\n/s)![1])) cats[c.id] = c.t;
     const lists = await Promise.all(brands.map(async ([b]) => {
-      const slug = b.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      const slug = b.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'universal';
       const res = await fetch(`${SITE}/data/${slug}.js?t=${t}`);
       if (!res.ok) return [] as P[];   // товарів марки на сайті немає — фід без них
       const text = await res.text();

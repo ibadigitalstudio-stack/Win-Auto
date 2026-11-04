@@ -60,7 +60,7 @@ def item(p):
 
 seen, items = set(), []
 for b, _ in brands:
-    slug = re.sub(r'[^a-z0-9]+', '-', b.lower())
+    slug = re.sub(r'[^a-z0-9]+', '-', b.lower()).strip('-') or 'universal'
     t = open(os.path.join(root, 'data', slug + '.js'), encoding='utf-8').read()
     for p in json.loads(t[t.index(']=') + 2: t.rstrip().rindex(';')]):
         # у фід — лише товари з фото, ціною й у наявності (вимоги Google)

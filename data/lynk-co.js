@@ -1,0 +1,1 @@
+(window.PRODUCTS_BY=window.PRODUCTS_BY||{})["Lynk & Co"]=[{"id":"STLY0001A","n":"Лобове скло Lynk & Co 01 2017–","d":"з місцем для камери, з місцем для датчика дощу, з місцем для VIN-номера","p":8582,"s":true,"img":"","a":[["Виробник","Signeda"]],"oe":["EG01AGACMVZ"],"o":0,"cars":[["Lynk & Co","01 2017–"]],"g":"c12","sg":"","c":"STLY0001A"}];

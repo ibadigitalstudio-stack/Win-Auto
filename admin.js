@@ -14,7 +14,7 @@
       return '<option value="' + esc(v[0]) + '">' + esc(v[1]) + '</option>';
     }).join('');
   };
-  var slug = function (b) { return b.toLowerCase().replace(/[^a-z0-9]+/g, '-'); };
+  var slug = function (b) { return b.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'universal'; };
   var PAGE = 60;
 
   var cfg = { owner: '', repo: '', token: '', branch: 'main' };

@@ -1,7 +1,7 @@
 (function () {
   // Марки, моделі та категорії — з products.js
   // Показ товарів вимкнено: каталог веде до вибору авто й пропонує підбір під замовлення
-  var OFF = true;
+  var OFF = false;
   var MODELS = {};
   var BRANDS = (window.BRANDS || []).map(function (b) { MODELS[b[0]] = b[1]; return b[0]; });
   var CATS = window.CATS || [];
@@ -40,7 +40,7 @@
     if (!loaded[b]) {
       loaded[b] = new Promise(function (done) {
         var s = document.createElement('script');
-        s.src = 'data/' + b.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.js?v=' + (window.DATA_V || 1);
+        s.src = 'data/' + (b.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'universal') + '.js?v=' + (window.DATA_V || 1);
         s.onload = function () { register((window.PRODUCTS_BY || {})[b] || []); done(); };
         s.onerror = done;
         document.head.appendChild(s);

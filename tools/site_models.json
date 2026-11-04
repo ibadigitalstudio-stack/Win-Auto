@@ -1,0 +1,309 @@
+[
+ [
+  "Audi",
+  [
+   "A3 (8V)",
+   "A3 (8Y)",
+   "A4 (B8)",
+   "A4 (B9)",
+   "A5 (8T)",
+   "A5 (F5)",
+   "A6 (4G / C7)",
+   "A6 (C8)",
+   "A7 (4G)",
+   "A7 (4K8)",
+   "A8 (D4)",
+   "A8 (D5)",
+   "Q3 (8U)",
+   "Q3 (F3)",
+   "Q4 e-tron (F4)",
+   "Q5 (8R)",
+   "Q5 (FY)",
+   "Q7 (4L)",
+   "Q7 (4M)",
+   "Q8",
+   "e-tron / Q8 e-tron (GE)"
+  ]
+ ],
+ [
+  "BMW",
+  [
+   "1 (F20 / F21)",
+   "2 (F22 / F23)",
+   "2 (F45 / F46)",
+   "3 (F30 / F31)",
+   "3 (G20 / G21)",
+   "3 GT (F34)",
+   "4 (F32 / F33 / F36)",
+   "4 (G22 / G26)",
+   "5 (F10/F11)",
+   "5 (G30/G31)",
+   "5 (G60)",
+   "5 GT (F07)",
+   "6 GT (G32)",
+   "7 (F01 / F02)",
+   "7 (G11 / G12)",
+   "7 (G70 / G71)",
+   "X1 (E84)",
+   "X1 (F48)",
+   "X1 (U11)",
+   "X2 (F39)",
+   "X3 (E83)",
+   "X3 (F25)",
+   "X3 (G01)",
+   "X3 (G45)",
+   "X4 (F26)",
+   "X4 (G02)",
+   "X5 (E70)",
+   "X5 (F15)",
+   "X5 (G05)",
+   "X6 (E71)",
+   "X6 (F16)",
+   "X6 (G06)",
+   "X7 (G07)"
+  ]
+ ],
+ [
+  "Ford",
+  [
+   "Edge II (CD4)",
+   "Explorer V (U502)",
+   "Explorer VI (U625)",
+   "Focus III (MK3)",
+   "Kuga II / Escape (MK2)",
+   "Mondeo V (MK5)",
+   "Mustang Mach-E",
+   "Mustang VI (S550)",
+   "Transit VIII (MK8 / V363)"
+  ]
+ ],
+ [
+  "Honda",
+  [
+   "Accord X (CV)"
+  ]
+ ],
+ [
+  "Hyundai",
+  [
+   "Elantra VI (AD)",
+   "Ioniq (AE)",
+   "Ioniq 5 (NE)",
+   "Kona (OS)",
+   "Santa Fe III (DM)",
+   "Tucson III (TL)",
+   "Tucson IV (NX4)"
+  ]
+ ],
+ [
+  "Infiniti",
+  [
+   "Q50 (V37)",
+   "QX50 (J50)"
+  ]
+ ],
+ [
+  "Jaguar",
+  [
+   "F-Pace (X761)"
+  ]
+ ],
+ [
+  "Jeep",
+  [
+   "Cherokee (KL)",
+   "Compass II (MP)",
+   "Grand Cherokee IV (WK2)"
+  ]
+ ],
+ [
+  "Kia",
+  [
+   "EV6 (CV)",
+   "K5 III (DL3)",
+   "Niro II (SG2)",
+   "Optima 3 (TF) / K5",
+   "Optima IV (JF)",
+   "Sorento III (UM)",
+   "Sorento IV (MQ4)",
+   "Soul III (SK3)",
+   "Sportage III (SL)",
+   "Sportage IV (QL)",
+   "Sportage V (NQ5)"
+  ]
+ ],
+ [
+  "Land Rover",
+  [
+   "Defender II (L663)",
+   "Discovery 4 (L319)",
+   "Discovery 5 (L462)",
+   "Discovery Sport (L550)",
+   "Range Rover Evoque (L538)",
+   "Range Rover Evoque (L551)",
+   "Range Rover IV (L405)",
+   "Range Rover Sport II (L494)",
+   "Range Rover V (L460)",
+   "Range Rover Velar (L560)"
+  ]
+ ],
+ [
+  "Lexus",
+  [
+   "ES (XZ10)",
+   "ES350 (XV50/XV60)",
+   "NX I (AZ10)",
+   "NX II (AZ20)",
+   "RX III (AL10)",
+   "RX IV (AL20)"
+  ]
+ ],
+ [
+  "Mazda",
+  [
+   "3 (BM / BN) 2017-2018",
+   "3 (BM) 2013–2016",
+   "3 (BP) 2019 -",
+   "6 (GJ) 2012-2015",
+   "6 (GJ) 2015-2018",
+   "6 (GJ) 2018-2024",
+   "CX-30",
+   "CX-5 (KE)",
+   "CX-5 II (KF)"
+  ]
+ ],
+ [
+  "Mercedes-Benz",
+  [
+   "B-Class (W246)",
+   "C-Class (W204)",
+   "C-Class (W205 / C205)",
+   "C-Class (W206)",
+   "CLA-Class (C117 / W117)",
+   "CLA-Class (C118)",
+   "CLS-Class (C218 / W218)",
+   "CLS-Class (C257)",
+   "E-Class (C207)",
+   "E-Class (C238)",
+   "E-Class (W212)",
+   "E-Class (W213)",
+   "E-Class (W214)",
+   "GL-Class (X164)",
+   "GL-Class (X166)",
+   "GLA-Class (X156)",
+   "GLB-Class (X247)",
+   "GLC-Class (C253)",
+   "GLC-Class (X253)",
+   "GLC-Class (X254)",
+   "GLE-Class (C292)",
+   "GLE-Class (V167 / W167)",
+   "GLE-Class (W166)",
+   "GLK-Class (X204)",
+   "GLS-Class (X166)",
+   "GLS-Class (X167)",
+   "M-Class (W166)",
+   "S-Class (C217)",
+   "S-Class (W221)",
+   "S-Class (W222)",
+   "S-Class (W223)",
+   "Vito (V-Class W447)"
+  ]
+ ],
+ [
+  "MINI",
+  [
+   "(F55 / F56)"
+  ]
+ ],
+ [
+  "Nissan",
+  [
+   "Murano (Z52)",
+   "Qashqai II (J11)",
+   "X-Trail III (T32)",
+   "X-Trail IV (T33)"
+  ]
+ ],
+ [
+  "Peugeot",
+  [
+   "3008 II"
+  ]
+ ],
+ [
+  "Porsche",
+  [
+   "Cayenne (92A)",
+   "Cayenne (9YA)",
+   "Macan (95B)",
+   "Panamera I (970)",
+   "Panamera II (971)",
+   "Taycan (Y1A)"
+  ]
+ ],
+ [
+  "Skoda",
+  [
+   "Fabia III",
+   "Kodiaq I",
+   "Octavia A7",
+   "Octavia A8",
+   "Rapid I",
+   "Superb II (B6)",
+   "Superb III (B8)"
+  ]
+ ],
+ [
+  "Tesla",
+  [
+   "Model 3",
+   "Model S",
+   "Model X",
+   "Model Y"
+  ]
+ ],
+ [
+  "Toyota",
+  [
+   "C-HR I (AX10)",
+   "Camry (XV50)",
+   "Camry (XV70)",
+   "Camry (XV80)",
+   "Corolla (E140 / E150)",
+   "Corolla XI (E170)",
+   "Highlander III (XU50)",
+   "Highlander IV (XU70)",
+   "Land Cruiser (FJ200)",
+   "Land Cruiser Prado (J150 / FJ150)",
+   "RAV 4 (XA40)",
+   "RAV 4 (XA50)",
+   "RAV 4 III (XA30)"
+  ]
+ ],
+ [
+  "Volkswagen",
+  [
+   "Crafter",
+   "ID.4",
+   "Tiguan (2016-2020)",
+   "Touareg 3 (CR7)"
+  ]
+ ],
+ [
+  "Volvo",
+  [
+   "EX30",
+   "S40",
+   "S60 II / V60 I",
+   "S60 III / V60 II (SPA)",
+   "S80 II / V70 III / XC70 III",
+   "S90",
+   "V40 II",
+   "XC40",
+   "XC60",
+   "XC60 II",
+   "XC90",
+   "XC90 II"
+  ]
+ ]
+]

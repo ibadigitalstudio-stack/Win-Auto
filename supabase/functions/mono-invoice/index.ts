@@ -21,7 +21,7 @@ async function sitePrices(): Promise<Map<string, number>> {
   const brands: [string, string[]][] = JSON.parse(core.match(/window\.BRANDS=(\[.*?\]);\n/s)![1]);
   const map = new Map<string, number>();
   await Promise.all(brands.map(async ([b]) => {
-    const slug = b.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const slug = b.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'universal';
     const text = await (await fetch(`${SITE}/data/${slug}.js?t=${t}`)).text();
     const list = JSON.parse(text.slice(text.indexOf(']=') + 2, text.trimEnd().lastIndexOf(';')));
     for (const p of list) map.set(String(p.id), Number(p.p));
